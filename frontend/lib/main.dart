@@ -1,0 +1,78 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase/supabase.dart';
+import 'screens/login_screen.dart';
+
+final supabase = SupabaseClient(
+  'https://rnjffzwflbbyznzhcqpg.supabase.co',
+  'sb_publishable_AGB2Fv2K6FXtyVeVLa_tWA_LE4foSrP',
+  authOptions: const AuthClientOptions(
+    authFlowType: AuthFlowType.implicit,
+  ),
+);
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(prefs),
+      child: SecurAIApp(prefs: prefs),
+    ),
+  );
+}
+
+class ThemeProvider extends ChangeNotifier {
+  final SharedPreferences _prefs;
+  late ThemeMode _themeMode;
+
+  ThemeProvider(this._prefs) {
+    _themeMode = (_prefs.getBool('isDarkMode') ?? true) ? ThemeMode.dark : ThemeMode.light;
+  }
+
+  ThemeMode get themeMode => _themeMode;
+
+  void toggleTheme(bool isDark) {
+    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    _prefs.setBool('isDarkMode', isDark);
+    notifyListeners();
+  }
+}
+
+class SecurAIApp extends StatelessWidget {
+  final SharedPreferences prefs;
+
+  const SecurAIApp({super.key, required this.prefs});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return MaterialApp(
+      title: 'SecurAI Copilot',
+      debugShowCheckedModeBanner: false,
+      themeMode: themeProvider.themeMode,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blueAccent,
+          brightness: Brightness.light,
+          surface: Colors.white,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blueAccent,
+          brightness: Brightness.dark,
+          surface: const Color(0xFF1E1E2C),
+        ),
+        scaffoldBackgroundColor: const Color(0xFF12121A),
+        useMaterial3: true,
+      ),
+      home: LoginScreen(prefs: prefs),
+    );
+  }
+}
