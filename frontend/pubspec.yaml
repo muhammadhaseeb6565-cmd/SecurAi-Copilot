@@ -44,6 +44,8 @@ dependencies:
   local_auth: ^2.1.8
   pdf: ^3.10.8
   printing: ^5.11.1
+  file_picker: ^8.0.0
+  speech_to_text: ^6.6.1
 
 dev_dependencies:
   flutter_test:

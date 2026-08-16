@@ -1,8 +1,10 @@
-import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../services/api_service.dart';
 import '../main.dart';
 
@@ -23,6 +25,9 @@ class _ChatScreenState extends State<ChatScreen> {
   
   List<Map<String, String>> _messages = [];
   bool _isLoading = false;
+  
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
 
   String get _storageKey => 'chat_thread_${widget.threadId}';
 
@@ -30,6 +35,48 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _loadMessages();
+    _initSpeech();
+  }
+
+  void _initSpeech() async {
+    await _speech.initialize();
+  }
+
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize();
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _controller.text = val.recognizedWords;
+          }),
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
+  }
+
+  void _pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['txt', 'log', 'json', 'csv', 'yaml', 'md'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      File file = File(result.files.single.path!);
+      String contents = await file.readAsString();
+      
+      if (contents.length > 5000) {
+        contents = "${contents.substring(0, 5000)}\n...[TRUNCATED]";
+      }
+      
+      setState(() {
+        _controller.text = "Please analyze this file: ${result.files.single.name}\n\n```\n$contents\n```\n";
+      });
+    }
   }
 
   Future<void> _loadMessages() async {
@@ -310,14 +357,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.attach_file, color: Colors.grey),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Simulating raw NGINX log upload...')),
-                              );
-                              Future.delayed(const Duration(seconds: 1), () {
-                                _sendMessage("Please analyze this raw access log and identify the attacker's IP and vulnerability:\n\n192.168.1.55 - - [15/Aug/2026:14:32:01 +0000] \"GET /api/v1/users?id=1' OR '1'='1 HTTP/1.1\" 200 4523 \"-\" \"Mozilla/5.0\" \n192.168.1.55 - - [15/Aug/2026:14:32:05 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 120 \"-\" \"curl/7.68.0\"");
-                              });
-                            },
+                            onPressed: _pickFile,
                             tooltip: "Upload File",
                           ),
                           Expanded(
@@ -334,17 +374,8 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.mic, color: Colors.grey),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Voice-to-Text Listening...')),
-                              );
-                              Future.delayed(const Duration(seconds: 2), () {
-                                setState(() {
-                                  _controller.text = "Can you analyze this Dockerfile for vulnerabilities?";
-                                });
-                              });
-                            },
+                            icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: _isListening ? Colors.red : Colors.grey),
+                            onPressed: _listen,
                             tooltip: "Voice to Text",
                           ),
                         ],
