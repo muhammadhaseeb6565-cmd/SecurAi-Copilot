@@ -5,10 +5,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong2.dart';
 import '../services/api_service.dart';
 import 'github_pr_screen.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong2.dart';
-import '../services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,6 +14,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final ApiService _apiService = ApiService();
+  
   final Map<String, dynamic> data = {
     "total_requests": 4820,
     "auth_failures": 142,
@@ -408,10 +406,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: FlutterMap(
-                options: const MapOptions(
+                options: MapOptions(
                   initialCenter: LatLng(20.0, 0.0),
                   initialZoom: 1.2,
-                  interactionOptions: InteractionOptions(
+                  interactionOptions: const InteractionOptions(
                     flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                   ),
                 ),
@@ -423,10 +421,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   MarkerLayer(
                     markers: [
-                      _buildThreatMarker(const LatLng(39.9042, 116.4074), "Beijing, CN"),
-                      _buildThreatMarker(const LatLng(55.7558, 37.6173), "Moscow, RU"),
-                      _buildThreatMarker(const LatLng(38.9072, -77.0369), "Washington DC, US"),
-                      _buildThreatMarker(const LatLng(51.5074, -0.1278), "London, UK"),
+                      _buildThreatMarker(LatLng(39.9042, 116.4074), "Beijing, CN"),
+                      _buildThreatMarker(LatLng(55.7558, 37.6173), "Moscow, RU"),
+                      _buildThreatMarker(LatLng(38.9072, -77.0369), "Washington DC, US"),
+                      _buildThreatMarker(LatLng(51.5074, -0.1278), "London, UK"),
                     ],
                   ),
                 ],

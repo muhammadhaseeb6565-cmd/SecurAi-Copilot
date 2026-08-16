@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -426,7 +427,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           IconButton(
                             icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: _isListening ? Colors.red : Colors.grey),
-                            onPressed: _listen,
+                            onPressed: _isListening ? _stopListening : _startListening,
                             tooltip: "Voice to Text",
                           ),
                         ],

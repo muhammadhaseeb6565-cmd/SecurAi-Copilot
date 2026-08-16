@@ -3,10 +3,12 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  Future<String> get baseUrl async {
+  static Future<String> getBaseUrl() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('api_base_url') ?? "https://securai-copilot.onrender.com";
   }
+
+  Future<String> get baseUrl async => await getBaseUrl();
 
   Stream<String> streamMessage(String message, String persona, String language) async* {
     final client = http.Client();
@@ -80,7 +82,8 @@ class ApiService {
 
   static Future<Map<String, dynamic>?> fetchSystemMetrics() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/system-metrics'));
+      final url = await getBaseUrl();
+      final response = await http.get(Uri.parse('$url/system-metrics'));
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       }
@@ -93,8 +96,9 @@ class ApiService {
 
   static Future<Map<String, dynamic>?> shodanScan(String ip, String apiKey) async {
     try {
+      final url = await getBaseUrl();
       final response = await http.post(
-        Uri.parse('$_baseUrl/shodan-scan'),
+        Uri.parse('$url/shodan-scan'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'ip': ip, 'api_key': apiKey}),
       );
@@ -110,8 +114,9 @@ class ApiService {
 
   static Future<Map<String, dynamic>?> githubPrReview(String repo, int prNumber, String pat) async {
     try {
+      final url = await getBaseUrl();
       final response = await http.post(
-        Uri.parse('$_baseUrl/github-pr'),
+        Uri.parse('$url/github-pr'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'repo': repo, 'pr_number': prNumber, 'pat': pat}),
       );
