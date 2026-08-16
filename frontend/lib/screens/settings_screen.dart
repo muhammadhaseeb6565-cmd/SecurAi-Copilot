@@ -22,7 +22,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _selectedPersona = widget.prefs.getString('persona') ?? "auditor";
     _selectedLanguage = widget.prefs.getString('language') ?? "English";
-    _apiUrlController.text = widget.prefs.getString('api_base_url') ?? "https://0a643739-5090-4757-848c-da433c6d0b94-00-ezuj5w92pcze.pike.replit.dev";
+    _apiUrlController.text = widget.prefs.getString('api_base_url') ?? "https://securai-copilot.onrender.com";
   }
 
   @override

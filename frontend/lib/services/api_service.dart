@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   Future<String> get baseUrl async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('api_base_url') ?? "https://0a643739-5090-4757-848c-da433c6d0b94-00-ezuj5w92pcze.pike.replit.dev";
+    return prefs.getString('api_base_url') ?? "https://securai-copilot.onrender.com";
   }
 
   Stream<String> streamMessage(String message, String persona, String language) async* {
