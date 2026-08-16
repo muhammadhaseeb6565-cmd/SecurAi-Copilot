@@ -13,3 +13,5 @@ frontend/macos/Flutter/ephemeral/
 
 # Misc
 .DS_Store
+
+.env
