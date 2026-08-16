@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
 
@@ -93,9 +95,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Incident Report shared as PDF!')),
-              );
+              _shareAsPdf(title, _generatedReport ?? "Empty Report");
             },
             icon: const Icon(Icons.share),
             label: const Text("Share PDF"),
@@ -103,6 +103,24 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _shareAsPdf(String title, String content) async {
+    final pdf = pw.Document();
+    
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return [
+            pw.Header(level: 0, child: pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold))),
+            pw.Paragraph(text: content),
+          ];
+        },
+      ),
+    );
+    
+    await Printing.sharePdf(bytes: await pdf.save(), filename: 'securai_report.pdf');
   }
 
   void _deployFix() async {

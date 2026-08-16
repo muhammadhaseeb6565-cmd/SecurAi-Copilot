@@ -110,8 +110,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           sideTitles: SideTitles(
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
-                              const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                              return Text(days[value.toInt() % 7], style: const TextStyle(fontSize: 10));
+                              final now = DateTime.now();
+                              final day = now.subtract(Duration(days: 6 - value.toInt()));
+                              final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                              return Text(days[day.weekday - 1], style: const TextStyle(fontSize: 10));
                             },
                           ),
                         ),

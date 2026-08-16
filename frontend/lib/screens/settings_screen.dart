@@ -146,41 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          const Divider(),
-          const SizedBox(height: 16),
-          Text('Backend Connection', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Card(
-            color: Theme.of(context).colorScheme.surface,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("API Server URL", style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  TextField(
-                    controller: _apiUrlController,
-                    decoration: InputDecoration(
-                      hintText: "https://your-backend.replit.dev",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.save),
-                        onPressed: () {
-                          _saveApiUrl(_apiUrlController.text);
-                          FocusScope.of(context).unfocus();
-                        },
-                      ),
-                    ),
-                    onSubmitted: _saveApiUrl,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text("If you see 'Server Error 502' or your graphs show 0, update this to your active Replit URL.", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
           const Text("Database Connection (Mock)", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Card(
