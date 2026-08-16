@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase/supabase.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'screens/login_screen.dart';
 
@@ -16,9 +17,10 @@ final supabase = SupabaseClient(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (Platform.isAndroid) {
-    await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
-  }
+  // Commented out to allow screenshots during development
+  // if (Platform.isAndroid && kReleaseMode) {
+  //   await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+  // }
   final prefs = await SharedPreferences.getInstance();
   
   runApp(
