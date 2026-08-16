@@ -298,50 +298,56 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.attach_file, color: Colors.grey),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Simulating raw NGINX log upload...')),
-                      );
-                      Future.delayed(const Duration(seconds: 1), () {
-                        _sendMessage("Please analyze this raw access log and identify the attacker's IP and vulnerability:\n\n192.168.1.55 - - [15/Aug/2026:14:32:01 +0000] \"GET /api/v1/users?id=1' OR '1'='1 HTTP/1.1\" 200 4523 \"-\" \"Mozilla/5.0\" \n192.168.1.55 - - [15/Aug/2026:14:32:05 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 120 \"-\" \"curl/7.68.0\"");
-                      });
-                    },
-                    tooltip: "Upload File / Analyze Code",
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.mic, color: Colors.grey),
-                    onPressed: () {
-                      // Simulated Voice-to-Text
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Voice-to-Text Listening...')),
-                      );
-                      Future.delayed(const Duration(seconds: 2), () {
-                        setState(() {
-                          _controller.text = "Can you analyze this Dockerfile for vulnerabilities?";
-                        });
-                      });
-                    },
-                    tooltip: "Voice to Text",
-                  ),
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).scaffoldBackgroundColor,
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
                       ),
-                      child: TextField(
-                        controller: _controller,
-                        minLines: 1,
-                        maxLines: 5,
-                        textInputAction: TextInputAction.newline,
-                        decoration: const InputDecoration(
-                          hintText: 'Ask anything about security...',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.attach_file, color: Colors.grey),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Simulating raw NGINX log upload...')),
+                              );
+                              Future.delayed(const Duration(seconds: 1), () {
+                                _sendMessage("Please analyze this raw access log and identify the attacker's IP and vulnerability:\n\n192.168.1.55 - - [15/Aug/2026:14:32:01 +0000] \"GET /api/v1/users?id=1' OR '1'='1 HTTP/1.1\" 200 4523 \"-\" \"Mozilla/5.0\" \n192.168.1.55 - - [15/Aug/2026:14:32:05 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 401 120 \"-\" \"curl/7.68.0\"");
+                              });
+                            },
+                            tooltip: "Upload File",
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              minLines: 1,
+                              maxLines: 5,
+                              textInputAction: TextInputAction.newline,
+                              decoration: const InputDecoration(
+                                hintText: 'Message SecurAI...',
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.mic, color: Colors.grey),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Voice-to-Text Listening...')),
+                              );
+                              Future.delayed(const Duration(seconds: 2), () {
+                                setState(() {
+                                  _controller.text = "Can you analyze this Dockerfile for vulnerabilities?";
+                                });
+                              });
+                            },
+                            tooltip: "Voice to Text",
+                          ),
+                        ],
                       ),
                     ),
                   ),
