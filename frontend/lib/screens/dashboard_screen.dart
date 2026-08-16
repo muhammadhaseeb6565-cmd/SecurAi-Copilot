@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong2.dart';
 import '../services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -113,7 +116,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 24),
                 _buildQuickActions(),
                 const SizedBox(height: 24),
+                _buildGlobalThreatMap(),
+                const SizedBox(height: 24),
                 _buildTrafficGraph(),
+                const SizedBox(height: 24),
               ],
             ),
           );
@@ -248,6 +254,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGlobalThreatMap() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Live Global Threat Map', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          Container(
+            height: 300,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+              boxShadow: [
+                BoxShadow(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05), blurRadius: 20, spreadRadius: 5),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: FlutterMap(
+                options: const MapOptions(
+                  initialCenter: LatLng(20.0, 0.0),
+                  initialZoom: 1.2,
+                  interactionOptions: InteractionOptions(
+                    flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                  ),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                    subdomains: const ['a', 'b', 'c', 'd'],
+                    userAgentPackageName: 'com.example.securai',
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      _buildThreatMarker(const LatLng(39.9042, 116.4074), "Beijing, CN"),
+                      _buildThreatMarker(const LatLng(55.7558, 37.6173), "Moscow, RU"),
+                      _buildThreatMarker(const LatLng(38.9072, -77.0369), "Washington DC, US"),
+                      _buildThreatMarker(const LatLng(51.5074, -0.1278), "London, UK"),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Marker _buildThreatMarker(LatLng point, String location) {
+    return Marker(
+      point: point,
+      width: 40,
+      height: 40,
+      child: GestureDetector(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Active Threat from $location')));
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.redAccent.withValues(alpha: 0.2),
+          ),
+          child: Center(
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.redAccent,
+                boxShadow: [
+                  BoxShadow(color: Colors.redAccent, blurRadius: 10, spreadRadius: 2),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
