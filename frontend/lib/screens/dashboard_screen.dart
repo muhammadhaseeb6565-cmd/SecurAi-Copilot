@@ -57,91 +57,204 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('API Overview', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Dashboard exported to PDF.')));
-                      },
-                      icon: const Icon(Icons.picture_as_pdf, size: 16),
-                      label: const Text("Export"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                        foregroundColor: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildStatCard(context, 'Live Traffic', '${data["total_requests"]}/s', Icons.swap_vert, Colors.blue),
-                    const SizedBox(width: 16),
-                    _buildStatCard(context, 'Auth Failures', '${data["auth_failures"]}', Icons.security_outlined, Colors.red),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildStatCard(context, 'Shadow APIs', '${data["shadow_apis_detected"]}', Icons.visibility_off, Colors.purple),
-                    const SizedBox(width: 16),
-                    _buildStatCard(context, 'Anomaly Score', '${data["anomaly_score"]}', Icons.analytics, data["anomaly_score"] > 5 ? Colors.orange : Colors.green),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                Text('Traffic Analysis (Live)', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                Container(
-                  height: 250,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: 6000,
-                      barTouchData: BarTouchData(enabled: false),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              final now = DateTime.now();
-                              final day = now.subtract(Duration(days: 6 - value.toInt()));
-                              final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                              return Text(days[day.weekday - 1], style: const TextStyle(fontSize: 10));
-                            },
-                          ),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                          boxShadow: [
+                            BoxShadow(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05), blurRadius: 20, spreadRadius: 5),
+                          ],
                         ),
-                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.shield, color: Theme.of(context).colorScheme.primary, size: 28),
+                            const SizedBox(height: 8),
+                            const Text('System Health', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${_systemHealth.toStringAsFixed(1)}%',
+                              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+                            ),
+                          ],
+                        ),
                       ),
-                      borderData: FlBorderData(show: false),
-                      barGroups: [
-                        BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 1500, color: Colors.blueAccent)]),
-                        BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 2000, color: Colors.blueAccent)]),
-                        BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 1800, color: Colors.blueAccent)]),
-                        BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 3000, color: Colors.blueAccent)]),
-                        BarChartGroupData(x: 4, barRods: [BarChartRodData(toY: 2500, color: Colors.blueAccent)]),
-                        BarChartGroupData(x: 5, barRods: [BarChartRodData(toY: 4000, color: Colors.blueAccent)]),
-                        BarChartGroupData(x: 6, barRods: [BarChartRodData(toY: data["total_requests"].toDouble(), color: Colors.greenAccent)]), // Live animated bar
-                      ],
                     ),
-                    swapAnimationDuration: const Duration(milliseconds: 500),
-                    swapAnimationCurve: Curves.easeInOut,
-                  ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                          boxShadow: [
+                            BoxShadow(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05), blurRadius: 20, spreadRadius: 5),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.warning_amber, color: Colors.orangeAccent, size: 28),
+                            const SizedBox(height: 8),
+                            const Text('Active Threats', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                            const SizedBox(height: 4),
+                            const Text('3', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 24),
+                _buildQuickActions(),
+                const SizedBox(height: 24),
+                _buildTrafficGraph(),
               ],
             ),
           );
         },
       ),
     );
+  }
+
+  Widget _buildQuickActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        ),
+        SizedBox(
+          height: 120,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            children: [
+              _buildActionCard(Icons.analytics, 'Run Deep Scan', Colors.cyanAccent),
+              _buildActionCard(Icons.security, 'Lockdown System', Colors.redAccent),
+              _buildActionCard(Icons.cloud_download, 'Export Logs', Colors.greenAccent),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(IconData icon, String title, Color color) {
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.05), blurRadius: 10, spreadRadius: 2),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$title triggered.')));
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: color, size: 32),
+                const SizedBox(height: 12),
+                Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrafficGraph() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Live Traffic Analysis', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          Container(
+            height: 250,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+            ),
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true, 
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withValues(alpha: 0.2), strokeWidth: 1),
+                ),
+                titlesData: FlTitlesData(
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(_getDayLabel(value.toInt()), style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: const [
+                      FlSpot(0, 3),
+                      FlSpot(1, 1),
+                      FlSpot(2, 4),
+                      FlSpot(3, 2),
+                      FlSpot(4, 5),
+                      FlSpot(5, 3),
+                      FlSpot(6, 4),
+                    ],
+                    isCurved: true,
+                    color: Theme.of(context).colorScheme.primary,
+                    barWidth: 4,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getDayLabel(int index) {
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days[index % 7];
   }
 
   Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color) {

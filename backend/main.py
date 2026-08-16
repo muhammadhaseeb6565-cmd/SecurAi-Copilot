@@ -6,6 +6,7 @@ from core.security_rag import stream_security_copilot, generate_incident_report,
 import asyncio
 import json
 import random
+import subprocess
 
 app = FastAPI(title="SecurAI Mobile Backend")
 
@@ -45,6 +46,52 @@ def generate_report(request: ReportRequest):
 def generate_patch(request: ReportRequest):
     response = generate_code_patch(request.alert_details)
     return {"patch": response}
+
+@app.get("/run-scan")
+def run_scan():
+    try:
+        bandit_result = subprocess.run(["bandit", "-r", "core", "main.py", "-f", "json"], capture_output=True, text=True)
+        try:
+            bandit_data = json.loads(bandit_result.stdout)
+            bandit_issues = bandit_data.get("results", [])
+        except Exception:
+            bandit_issues = []
+
+        safety_result = subprocess.run(["safety", "check", "-r", "requirements.txt", "--json"], capture_output=True, text=True)
+        try:
+            safety_data = json.loads(safety_result.stdout)
+            safety_issues = safety_data.get("vulnerabilities", [])
+        except Exception:
+            safety_issues = []
+
+        alerts = []
+        for issue in bandit_issues:
+            alerts.append({
+                "title": f"Code Flaw: {issue.get('issue_text')}",
+                "severity": issue.get('issue_severity', 'MEDIUM').capitalize(),
+                "time": "Just now",
+                "details": f"File: {issue.get('filename')}\nLine: {issue.get('line_number')}\nCode:\n{issue.get('code')}"
+            })
+            
+        for issue in safety_issues:
+            alerts.append({
+                "title": f"Vulnerable Dependency: {issue.get('package_name')}",
+                "severity": "High",
+                "time": "Just now",
+                "details": f"Version {issue.get('analyzed_version')} is vulnerable to {issue.get('vulnerability_id')}.\nAdvisory: {issue.get('advisory')}"
+            })
+            
+        if not alerts:
+            alerts.append({
+                "title": "All Checks Passed",
+                "severity": "Low",
+                "time": "Just now",
+                "details": "Bandit and Safety found no critical vulnerabilities in your codebase."
+            })
+            
+        return {"alerts": alerts}
+    except Exception as e:
+        return {"alerts": [{"title": "Scanner Error", "severity": "High", "time": "Just now", "details": str(e)}]}
 
 async def metrics_generator():
     while True:

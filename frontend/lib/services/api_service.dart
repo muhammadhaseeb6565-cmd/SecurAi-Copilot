@@ -61,6 +61,25 @@ class ApiService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> fetchRealAlerts() async {
+    final url = await baseUrl;
+    try {
+      final response = await http.get(Uri.parse('$url/run-scan'));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> alertsData = data['alerts'] ?? [];
+        return alertsData.map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+      return [
+        {"title": "Server Error", "severity": "High", "time": "Just now", "details": "Failed to run scan. HTTP ${response.statusCode}"}
+      ];
+    } catch (e) {
+      return [
+        {"title": "Connection Error", "severity": "High", "time": "Just now", "details": "Could not connect to backend server: $e"}
+      ];
+    }
+  }
+
   Stream<Map<String, dynamic>> streamMetrics() async* {
     final client = http.Client();
     try {

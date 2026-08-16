@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
+import 'screens/splash_screen.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -66,20 +68,27 @@ class SecurAIApp extends StatelessWidget {
           seedColor: Colors.blueAccent,
           brightness: Brightness.light,
           surface: Colors.white,
+          primary: Colors.blueAccent,
         ),
         scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+        textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blueAccent,
+          seedColor: Colors.cyanAccent,
           brightness: Brightness.dark,
-          surface: const Color(0xFF1E1E2C),
+          surface: const Color(0xFF141414),
+          primary: Colors.cyanAccent,
         ),
-        scaffoldBackgroundColor: const Color(0xFF12121A),
+        scaffoldBackgroundColor: const Color(0xFF050505), // AMOLED Black
+        textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme).apply(
+          bodyColor: Colors.white,
+          displayColor: Colors.white,
+        ),
         useMaterial3: true,
       ),
-      home: AuthGuard(prefs: prefs),
+      home: SplashScreen(prefs: prefs),
     );
   }
 }
