@@ -27,7 +27,10 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = false;
   
   final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isSpeechInitialized = false;
   bool _isListening = false;
+  bool _handsFreeMode = false;
+  Timer? _handsFreeTimer;
 
   String get _storageKey => 'chat_thread_${widget.threadId}';
 
@@ -39,24 +42,56 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _initSpeech() async {
-    await _speech.initialize();
+    _isSpeechInitialized = await _speech.initialize();
   }
 
-  void _listen() async {
-    if (!_isListening) {
-      bool available = await _speech.initialize();
-      if (available) {
-        setState(() => _isListening = true);
-        _speech.listen(
-          onResult: (val) => setState(() {
-            _controller.text = val.recognizedWords;
-          }),
-        );
+  void _startListening() async {
+    if (!_isSpeechInitialized) return;
+    setState(() => _isListening = true);
+    await _speech.listen(
+      onResult: (result) {
+        _controller.text = result.recognizedWords;
+        if (result.finalResult) {
+          setState(() => _isListening = false);
+          if (_handsFreeMode && result.recognizedWords.toLowerCase().startsWith("hey securai")) {
+            _controller.text = result.recognizedWords.substring(11).trim();
+            _sendMessage();
+          } else if (!_handsFreeMode) {
+            _sendMessage();
+          }
+        }
+      },
+    );
+  }
+
+  void _stopListening() async {
+    await _speech.stop();
+    setState(() => _isListening = false);
+  }
+
+  void _toggleHandsFree(bool value) {
+    setState(() {
+      _handsFreeMode = value;
+      if (_handsFreeMode) {
+        _startListening();
+        _handsFreeTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+          if (!_isListening && _handsFreeMode) {
+            _startListening();
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Hands-Free Mode Enabled. Say "Hey SecurAI..."')));
+      } else {
+        _handsFreeTimer?.cancel();
+        _stopListening();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Hands-Free Mode Disabled.')));
       }
-    } else {
-      setState(() => _isListening = false);
-      _speech.stop();
-    }
+    });
+  }
+
+  @override
+  void dispose() {
+    _handsFreeTimer?.cancel();
+    super.dispose();
   }
 
   void _pickFile() async {
@@ -306,7 +341,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SecurAI', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('SecurAI Copilot', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -314,6 +349,22 @@ class _ChatScreenState extends State<ChatScreen> {
           icon: const Icon(Icons.menu),
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
+        actions: [
+          Row(
+            children: [
+              const Text('Hands-Free', style: TextStyle(fontSize: 12, color: Colors.cyanAccent)),
+              Switch(
+                value: _handsFreeMode,
+                onChanged: _toggleHandsFree,
+                activeColor: Colors.cyanAccent,
+              ),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.security),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Column(
         children: [

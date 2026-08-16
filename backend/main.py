@@ -7,6 +7,8 @@ import asyncio
 import json
 import random
 import subprocess
+import psutil
+import requests
 
 app = FastAPI(title="SecurAI Mobile Backend")
 
@@ -23,8 +25,20 @@ class ChatRequest(BaseModel):
     persona: str = "auditor"
     language: str = "English"
 
+class CodeRequest(BaseModel):
+    code: str
+
 class ReportRequest(BaseModel):
     alert_details: str
+
+class ShodanRequest(BaseModel):
+    ip: str
+    api_key: str
+
+class GithubPrRequest(BaseModel):
+    repo: str
+    pr_number: int
+    pat: str
 
 @app.get("/")
 def read_root():
@@ -92,6 +106,67 @@ def run_scan():
         return {"alerts": alerts}
     except Exception as e:
         return {"alerts": [{"title": "Scanner Error", "severity": "High", "time": "Just now", "details": str(e)}]}
+
+@app.get("/system-metrics")
+def system_metrics():
+    try:
+        cpu = psutil.cpu_percent(interval=0.1)
+        ram = psutil.virtual_memory().percent
+        disk = psutil.disk_usage('/').percent
+        health = 100 - ((cpu + ram) / 2)
+        if health < 0: health = 0
+        return {
+            "cpu_percent": cpu,
+            "ram_percent": ram,
+            "disk_percent": disk,
+            "system_health": health
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/shodan-scan")
+def shodan_scan(request: ShodanRequest):
+    try:
+        if not request.api_key:
+            return {"error": "Shodan API Key is required."}
+        url = f"https://api.shodan.io/shodan/host/{request.ip}?key={request.api_key}"
+        resp = requests.get(url)
+        if resp.status_code == 200:
+            data = resp.json()
+            return {
+                "ip": data.get("ip_str"),
+                "os": data.get("os", "Unknown"),
+                "ports": data.get("ports", []),
+                "vulns": data.get("vulns", []),
+                "org": data.get("org", "Unknown"),
+            }
+        else:
+            return {"error": f"Shodan API error: {resp.text}"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/github-pr")
+def github_pr(request: GithubPrRequest):
+    try:
+        headers = {"Accept": "application/vnd.github.v3.diff"}
+        if request.pat and request.pat.strip() != "":
+            headers["Authorization"] = f"token {request.pat}"
+            
+        url = f"https://api.github.com/repos/{request.repo}/pulls/{request.pr_number}"
+        resp = requests.get(url, headers=headers)
+        if resp.status_code == 200:
+            diff_text = resp.text
+            if not diff_text:
+                return {"review": "PR contains no diff or is not accessible."}
+            # Feed the diff to LangChain to get a review
+            # We reuse the generate_code_patch function which calls LangChain
+            from core.security_rag import generate_code_patch
+            review = generate_code_patch(f"You are a Senior Application Security Engineer. Review the following GitHub PR diff for security vulnerabilities. Be extremely thorough. Point out missing authentication, SQL injection, secrets, etc.\n\n{diff_text}")
+            return {"review": review}
+        else:
+            return {"error": f"GitHub API error: {resp.status_code} - {resp.text}"}
+    except Exception as e:
+        return {"error": str(e)}
 
 async def metrics_generator():
     while True:

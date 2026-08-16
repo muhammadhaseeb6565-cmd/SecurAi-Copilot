@@ -4,6 +4,11 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong2.dart';
 import '../services/api_service.dart';
+import 'github_pr_screen.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong2.dart';
+import '../services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,7 +18,50 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final ApiService _apiService = ApiService();
+  final Map<String, dynamic> data = {
+    "total_requests": 4820,
+    "auth_failures": 142,
+    "shadow_apis_detected": 3,
+    "anomaly_score": 7.4
+  };
+
+  Map<String, dynamic>? _systemMetrics;
+  final _shodanController = TextEditingController();
+  Map<String, dynamic>? _shodanResult;
+  bool _isShodanLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSystemMetrics();
+  }
+
+  Future<void> _fetchSystemMetrics() async {
+    final metrics = await ApiService.fetchSystemMetrics();
+    if (metrics != null && mounted) {
+      setState(() {
+        _systemMetrics = metrics;
+      });
+    }
+  }
+
+  Future<void> _runShodanScan() async {
+    final ip = _shodanController.text.trim();
+    if (ip.isEmpty) return;
+
+    setState(() {
+      _isShodanLoading = true;
+      _shodanResult = null;
+    });
+
+    // We use a hardcoded API key for the UI demo if the user hasn't set one in settings
+    final result = await ApiService.shodanScan(ip, 'YOUR_SHODAN_API_KEY');
+    
+    setState(() {
+      _isShodanLoading = false;
+      _shodanResult = result ?? {'error': 'Failed to connect or invalid API key.'};
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +128,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const Text('System Health', style: TextStyle(color: Colors.grey, fontSize: 12)),
                             const SizedBox(height: 4),
                             Text(
-                              '${_systemHealth.toStringAsFixed(1)}%',
+                              _systemMetrics != null 
+                                ? '${_systemMetrics!['system_health'].toStringAsFixed(1)}%' 
+                                : '...',
                               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
                             ),
                           ],
@@ -116,6 +166,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 24),
                 _buildQuickActions(),
                 const SizedBox(height: 24),
+                _buildShodanSearch(),
+                const SizedBox(height: 24),
                 _buildGlobalThreatMap(),
                 const SizedBox(height: 24),
                 _buildTrafficGraph(),
@@ -142,9 +194,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             children: [
-              _buildActionCard(Icons.analytics, 'Run Deep Scan', Colors.cyanAccent),
-              _buildActionCard(Icons.security, 'Lockdown System', Colors.redAccent),
-              _buildActionCard(Icons.cloud_download, 'Export Logs', Colors.greenAccent),
+              _buildActionCard(Icons.code, 'GitHub PR Audit', Colors.purpleAccent, () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const GithubPrScreen()));
+              }),
+              _buildActionCard(Icons.analytics, 'Run Deep Scan', Colors.cyanAccent, () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deep Scan triggered.')));
+              }),
+              _buildActionCard(Icons.security, 'Lockdown System', Colors.redAccent, () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System Lockdown triggered.')));
+              }),
+              _buildActionCard(Icons.cloud_download, 'Export Logs', Colors.greenAccent, () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logs exported.')));
+              }),
             ],
           ),
         ),
@@ -152,7 +213,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildActionCard(IconData icon, String title, Color color) {
+  Widget _buildActionCard(IconData icon, String title, Color color, VoidCallback onTap) {
     return Container(
       width: 140,
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -167,9 +228,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$title triggered.')));
-          },
+          onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -251,6 +310,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShodanSearch() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Shodan Attack Surface Map', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _shodanController,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter IP Address (e.g., 8.8.8.8)',
+                          prefixIcon: Icon(Icons.radar, color: Colors.cyanAccent),
+                          border: OutlineInputBorder(),
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: _isShodanLoading 
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.cyanAccent, strokeWidth: 2))
+                        : const Icon(Icons.search, color: Colors.cyanAccent),
+                      onPressed: _isShodanLoading ? null : _runShodanScan,
+                    ),
+                  ],
+                ),
+                if (_shodanResult != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: _shodanResult!.containsKey('error')
+                        ? Text(_shodanResult!['error'], style: const TextStyle(color: Colors.redAccent))
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Organization: ${_shodanResult!['org']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              Text('OS: ${_shodanResult!['os']}', style: const TextStyle(color: Colors.white70)),
+                              const SizedBox(height: 8),
+                              const Text('Open Ports:', style: TextStyle(color: Colors.cyanAccent, fontSize: 12)),
+                              Text('${_shodanResult!['ports']}', style: const TextStyle(color: Colors.white54)),
+                            ],
+                          ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

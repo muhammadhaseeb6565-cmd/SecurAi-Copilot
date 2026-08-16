@@ -70,13 +70,58 @@ class ApiService {
         final List<dynamic> alertsData = data['alerts'] ?? [];
         return alertsData.map((e) => Map<String, dynamic>.from(e)).toList();
       }
-      return [
-        {"title": "Server Error", "severity": "High", "time": "Just now", "details": "Failed to run scan. HTTP ${response.statusCode}"}
-      ];
+      print('Error fetching real alerts: $response.statusCode');
+      return [];
     } catch (e) {
-      return [
-        {"title": "Connection Error", "severity": "High", "time": "Just now", "details": "Could not connect to backend server: $e"}
-      ];
+      print('Error fetching real alerts: $e');
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> fetchSystemMetrics() async {
+    try {
+      final response = await http.get(Uri.parse('$_baseUrl/system-metrics'));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching system metrics: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> shodanScan(String ip, String apiKey) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/shodan-scan'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'ip': ip, 'api_key': apiKey}),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      print('Error running shodan scan: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> githubPrReview(String repo, int prNumber, String pat) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/github-pr'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'repo': repo, 'pr_number': prNumber, 'pat': pat}),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      print('Error running github PR review: $e');
+      return null;
     }
   }
 

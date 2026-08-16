@@ -7,3 +7,5 @@ pydantic==2.6.4
 python-dotenv==1.0.1
 bandit==1.7.8
 safety==3.1.0
+psutil==5.9.8
+requests==2.31.0
