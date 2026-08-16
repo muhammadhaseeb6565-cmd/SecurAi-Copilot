@@ -158,7 +158,7 @@ class _MainShellState extends State<MainShell> {
             onTap: () async {
               await supabase.auth.signOut();
               if (mounted) {
-                Navigator.of(context).pushReplacementNamed('/'); // Assume route '/' maps to LoginScreen or similar handling
+                Navigator.of(context).popUntil((route) => route.isFirst);
               }
             },
           ),
