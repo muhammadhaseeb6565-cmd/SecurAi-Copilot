@@ -7,16 +7,16 @@ import 'package:flutter/foundation.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 
-final supabase = SupabaseClient(
-  'https://rnjffzwflbbyznzhcqpg.supabase.co',
-  'sb_publishable_AGB2Fv2K6FXtyVeVLa_tWA_LE4foSrP',
-  authOptions: const AuthClientOptions(
-    authFlowType: AuthFlowType.implicit,
-  ),
-);
+final supabase = Supabase.instance.client;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  await Supabase.initialize(
+    url: 'https://rnjffzwflbbyznzhcqpg.supabase.co',
+    anonKey: 'sb_publishable_AGB2Fv2K6FXtyVeVLa_tWA_LE4foSrP',
+  );
+
   // Commented out to allow screenshots during development
   // if (Platform.isAndroid && kReleaseMode) {
   //   await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
