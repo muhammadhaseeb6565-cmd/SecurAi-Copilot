@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:supabase/supabase.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'screens/login_screen.dart';
 
 final supabase = SupabaseClient(
