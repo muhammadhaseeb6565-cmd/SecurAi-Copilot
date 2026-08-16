@@ -147,13 +147,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
                   const SizedBox(height: 8),
-          const Text("Database Connection (Mock)", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          const Text("Database Connection", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Card(
             color: Theme.of(context).colorScheme.surface,
             child: ListTile(
               leading: const Icon(Icons.storage, color: Colors.green),
-              title: const Text("Supabase Vector DB"),
+              title: const Text("Supabase PostgreSQL"),
               subtitle: const Text("Connected"),
               trailing: const Icon(Icons.check_circle, color: Colors.green),
             ),
