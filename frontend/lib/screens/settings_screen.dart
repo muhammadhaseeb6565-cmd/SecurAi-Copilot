@@ -15,12 +15,20 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedPersona = "auditor";
   String _selectedLanguage = "English";
+  final TextEditingController _apiUrlController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _selectedPersona = widget.prefs.getString('persona') ?? "auditor";
     _selectedLanguage = widget.prefs.getString('language') ?? "English";
+    _apiUrlController.text = widget.prefs.getString('api_base_url') ?? "https://0a643739-5090-4757-848c-da433c6d0b94-00-ezuj5w92pcze.pike.replit.dev";
+  }
+
+  @override
+  void dispose() {
+    _apiUrlController.dispose();
+    super.dispose();
   }
 
   void _saveLanguage(String? value) {
@@ -45,6 +53,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SnackBar(content: Text('Persona updated to $value')),
       );
     }
+  }
+
+  void _saveApiUrl(String value) {
+    widget.prefs.setString('api_base_url', value.trim());
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Backend API URL updated successfully. Restart app to apply.')),
+    );
   }
 
   @override
@@ -129,6 +144,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   activeColor: Theme.of(context).colorScheme.primary,
                 ),
               ],
+            ),
+          ),
+          const Divider(),
+          const SizedBox(height: 16),
+          Text('Backend Connection', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Card(
+            color: Theme.of(context).colorScheme.surface,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("API Server URL", style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _apiUrlController,
+                    decoration: InputDecoration(
+                      hintText: "https://your-backend.replit.dev",
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.save),
+                        onPressed: () {
+                          _saveApiUrl(_apiUrlController.text);
+                          FocusScope.of(context).unfocus();
+                        },
+                      ),
+                    ),
+                    onSubmitted: _saveApiUrl,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text("If you see 'Server Error 502' or your graphs show 0, update this to your active Replit URL.", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 32),

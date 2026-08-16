@@ -1,13 +1,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  final String baseUrl = "https://0a643739-5090-4757-848c-da433c6d0b94-00-ezuj5w92pcze.pike.replit.dev";
+  Future<String> get baseUrl async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('api_base_url') ?? "https://0a643739-5090-4757-848c-da433c6d0b94-00-ezuj5w92pcze.pike.replit.dev";
+  }
 
   Stream<String> streamMessage(String message, String persona, String language) async* {
     final client = http.Client();
     try {
-      final request = http.Request('POST', Uri.parse('$baseUrl/chat'));
+      final url = await baseUrl;
+      final request = http.Request('POST', Uri.parse('$url/chat'));
       request.headers['Content-Type'] = 'application/json';
       request.body = jsonEncode({"message": message, "persona": persona, "language": language});
 
@@ -38,8 +43,9 @@ class ApiService {
 
   Future<String> _postRequest(String endpoint, String alertDetails, String key) async {
     try {
+      final url = await baseUrl;
       final response = await http.post(
-        Uri.parse('$baseUrl$endpoint'),
+        Uri.parse('$url$endpoint'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({"alert_details": alertDetails}),
       );
@@ -58,7 +64,8 @@ class ApiService {
   Stream<Map<String, dynamic>> streamMetrics() async* {
     final client = http.Client();
     try {
-      final request = http.Request('GET', Uri.parse('$baseUrl/metrics/stream'));
+      final url = await baseUrl;
+      final request = http.Request('GET', Uri.parse('$url/metrics/stream'));
       final response = await client.send(request);
       
       if (response.statusCode == 200) {

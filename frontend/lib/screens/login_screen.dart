@@ -150,34 +150,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   child: Text(_isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.fingerprint, size: 32),
-                      color: theme.colorScheme.primary,
-                      onPressed: _isLoading ? null : () {
-                        // Mock biometrics
-                        _emailController.text = "admin@securai.com";
-                        _passwordController.text = "password123";
-                        _authenticate();
-                      },
-                      tooltip: "Login with Biometrics",
-                    ),
-                    const SizedBox(width: 16),
-                    IconButton(
-                      icon: const Icon(Icons.face, size: 32),
-                      color: theme.colorScheme.primary,
-                      onPressed: _isLoading ? null : () {
-                        // Mock FaceID
-                        _emailController.text = "admin@securai.com";
-                        _passwordController.text = "password123";
-                        _authenticate();
-                      },
-                      tooltip: "Login with FaceID",
-                    ),
-                  ],
-                ),
+                // Removed fake biometrics
               ],
             ),
           ),

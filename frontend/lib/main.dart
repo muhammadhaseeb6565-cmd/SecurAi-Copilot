@@ -5,6 +5,7 @@ import 'package:supabase/supabase.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_shell.dart';
 
 final supabase = SupabaseClient(
   'https://rnjffzwflbbyznzhcqpg.supabase.co',
@@ -78,7 +79,31 @@ class SecurAIApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF12121A),
         useMaterial3: true,
       ),
-      home: LoginScreen(prefs: prefs),
+      home: AuthGuard(prefs: prefs),
+    );
+  }
+}
+
+class AuthGuard extends StatelessWidget {
+  final SharedPreferences prefs;
+  
+  const AuthGuard({super.key, required this.prefs});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: supabase.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        final session = snapshot.data?.session ?? supabase.auth.currentSession;
+        if (session != null) {
+          return MainShell(prefs: prefs);
+        }
+        // If not logged in, go to LoginScreen
+        return LoginScreen(prefs: prefs);
+      },
     );
   }
 }

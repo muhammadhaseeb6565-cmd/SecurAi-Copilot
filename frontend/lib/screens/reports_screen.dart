@@ -157,18 +157,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            isHigh ? Icons.error_outline : Icons.warning_amber,
-                            color: isHigh ? Colors.red : Colors.orange,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            alert["title"]!,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              isHigh ? Icons.error_outline : Icons.warning_amber,
+                              color: isHigh ? Colors.red : Colors.orange,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                alert["title"]!,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.visible,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       Text(alert["time"]!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
                     ],
@@ -176,8 +181,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   const SizedBox(height: 12),
                   Text(alert["details"]!, style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       ElevatedButton.icon(
                         onPressed: _isGenerating ? null : () => _generatePatch(alert["details"]!),
@@ -188,7 +195,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           foregroundColor: Colors.green,
                         ),
                       ),
-                      const SizedBox(width: 8),
                       ElevatedButton.icon(
                         onPressed: _isGenerating ? null : () => _generateReport(alert["details"]!),
                         icon: const Icon(Icons.auto_awesome, size: 18),
