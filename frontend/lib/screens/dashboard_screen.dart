@@ -473,7 +473,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       getTitlesWidget: (value, meta) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(_getDayLabel(value.toInt()), style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                          child: Text(_getTimeLabel(value.toInt()), style: const TextStyle(color: Colors.grey, fontSize: 10)),
                         );
                       },
                     ),
@@ -657,8 +657,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  String _getDayLabel(int index) {
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days[index % 7];
+  String _getTimeLabel(int index) {
+    return '${(index * 3) % 60}s';
   }
 }
