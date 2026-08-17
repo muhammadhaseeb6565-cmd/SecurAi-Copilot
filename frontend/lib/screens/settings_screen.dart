@@ -127,6 +127,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _requireBiometrics,
             onChanged: _saveBiometrics,
           ),
+          ListTile(
+            title: const Text('Export My Data'),
+            subtitle: const Text('Download a JSON copy of your personal settings and app data'),
+            trailing: const Icon(Icons.download, color: Colors.cyanAccent),
+            onTap: _exportData,
+          ),
           const Divider(),
           const SizedBox(height: 16),
           Text('Appearance', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
