@@ -34,6 +34,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Timer? _healthTimer;
   List<FlSpot> _trafficSpots = [const FlSpot(0, 0)];
   double _graphX = 0;
+  
+  final List<Map<String, dynamic>> _liveAlerts = [];
 
   @override
   void initState() {
@@ -50,9 +52,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (_trafficSpots.length > 10) {
             _trafficSpots.removeAt(0);
           }
+          _generateLiveAlerts(data);
         });
       }
     });
+  }
+
+  void _generateLiveAlerts(Map<String, dynamic> data) {
+    final anomaly = data['anomaly_score'] ?? 0.0;
+    final authFails = data['auth_failures'] ?? 0;
+    final shadow = data['shadow_apis_detected'] ?? 0;
+
+    String? type;
+    String? message;
+    Color? color;
+
+    if (anomaly > 8.0) {
+      type = 'CRITICAL';
+      message = 'High anomaly score spike: $anomaly';
+      color = Colors.redAccent;
+    } else if (authFails > 60) {
+      type = 'WARNING';
+      message = 'Unusual auth failures: $authFails';
+      color = Colors.orangeAccent;
+    } else if (shadow > 3) {
+      type = 'INFO';
+      message = 'Unregistered API endpoints hit: $shadow';
+      color = Colors.cyanAccent;
+    }
+
+    if (type != null && message != null && color != null) {
+      // Prevent spamming the exact same message back to back
+      if (_liveAlerts.isEmpty || _liveAlerts.first['message'] != message) {
+        _liveAlerts.insert(0, {
+          'type': type,
+          'message': message,
+          'color': color,
+          'time': "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}:${DateTime.now().second.toString().padLeft(2, '0')}"
+        });
+        if (_liveAlerts.length > 5) {
+          _liveAlerts.removeLast();
+        }
+      }
+    }
   }
 
   @override
@@ -223,6 +265,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
+                _buildLiveAlertsFeed(),
+                const SizedBox(height: 24),
                 _buildQuickActions(),
                 const SizedBox(height: 24),
                 _buildShodanSearch(),
@@ -234,6 +278,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           );
+  }
+
+  Widget _buildLiveAlertsFeed() {
+    if (_liveAlerts.isEmpty) return const SizedBox.shrink();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Text('Live Incident Log', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _liveAlerts.length,
+          itemBuilder: (context, index) {
+            final alert = _liveAlerts[index];
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (alert['color'] as Color).withValues(alpha: 0.1),
+                border: Border(left: BorderSide(color: alert['color'] as Color, width: 4)),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    alert['type'] == 'CRITICAL' ? Icons.error : alert['type'] == 'WARNING' ? Icons.warning : Icons.info,
+                    color: alert['color'] as Color,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(alert['type'] as String, style: TextStyle(color: alert['color'] as Color, fontWeight: FontWeight.bold, fontSize: 10)),
+                        Text(alert['message'] as String, style: const TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                  Text(alert['time'] as String, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
   }
 
   Widget _buildQuickActions() {
