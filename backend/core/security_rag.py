@@ -24,7 +24,10 @@ async def stream_security_copilot(message: str, persona: str = "auditor", langua
         
         system_prompt = PERSONAS.get(persona, PERSONAS["auditor"])
         # Append the language constraint directly to the system prompt
-        system_prompt += f"\nCRITICAL INSTRUCTION: You MUST translate and write your entire response exclusively in {language}."
+        if language.lower() == "roman urdu":
+            system_prompt += f"\nCRITICAL INSTRUCTION: You MUST translate and write your entire response exclusively in Roman Urdu (Urdu written in the English alphabet). You MUST use pure Urdu vocabulary (e.g. 'hifazat', 'masla', 'istamal', 'shukriya') and strictly AVOID Hindi vocabulary (e.g. do not use 'suraksha', 'samasya', 'prayog', 'dhanyavad')."
+        else:
+            system_prompt += f"\nCRITICAL INSTRUCTION: You MUST translate and write your entire response exclusively in {language}."
 
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
