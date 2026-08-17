@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -16,22 +17,49 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final ApiService _apiService = ApiService();
   
-  final Map<String, dynamic> data = {
-    "total_requests": 4820,
-    "auth_failures": 142,
-    "shadow_apis_detected": 3,
-    "anomaly_score": 7.4
-  };
-
   Map<String, dynamic>? _systemMetrics;
   final _shodanController = TextEditingController();
   Map<String, dynamic>? _shodanResult;
   bool _isShodanLoading = false;
+  bool _isDeepScanning = false;
+
+  StreamSubscription? _metricsSub;
+  Map<String, dynamic> _streamData = {
+    "total_requests": 0,
+    "auth_failures": 0,
+    "shadow_apis_detected": 0,
+    "anomaly_score": 0.0,
+    "threats": 0
+  };
+  Timer? _healthTimer;
+  List<FlSpot> _trafficSpots = [const FlSpot(0, 0)];
+  double _graphX = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchSystemMetrics();
+    _healthTimer = Timer.periodic(const Duration(seconds: 3), (_) => _fetchSystemMetrics());
+    
+    _metricsSub = _apiService.streamMetrics().listen((data) {
+      if (mounted) {
+        setState(() {
+          _streamData = data;
+          _graphX += 1;
+          _trafficSpots.add(FlSpot(_graphX, (data["total_requests"] ?? 0) / 1000.0));
+          if (_trafficSpots.length > 10) {
+            _trafficSpots.removeAt(0);
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _healthTimer?.cancel();
+    _metricsSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchSystemMetrics() async {
@@ -61,6 +89,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  Future<void> _runDeepScan() async {
+    setState(() => _isDeepScanning = true);
+    final alerts = await _apiService.fetchRealAlerts();
+    setState(() => _isDeepScanning = false);
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text('Deep Scan Results', style: TextStyle(color: Colors.cyanAccent)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: alerts.isEmpty 
+            ? const Text("No vulnerabilities found.", style: TextStyle(color: Colors.greenAccent))
+            : ListView.builder(
+                shrinkWrap: true,
+                itemCount: alerts.length,
+                itemBuilder: (context, i) {
+                  return ListTile(
+                    leading: Icon(
+                      alerts[i]['severity'] == 'High' ? Icons.error : Icons.warning,
+                      color: alerts[i]['severity'] == 'High' ? Colors.redAccent : Colors.orangeAccent
+                    ),
+                    title: Text(alerts[i]['title'] ?? 'Alert', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(alerts[i]['details'] ?? '', maxLines: 3, overflow: TextOverflow.ellipsis),
+                  );
+                }
+              ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: const Text('Close', style: TextStyle(color: Colors.cyanAccent))
+          )
+        ],
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,43 +136,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text('Real-Time Security Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
-      body: StreamBuilder<Map<String, dynamic>>(
-        stream: _apiService.streamMetrics(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final data = snapshot.data ?? {
-            "total_requests": 0,
-            "auth_failures": 0,
-            "shadow_apis_detected": 0,
-            "anomaly_score": 0.0,
-            "threats": 0
-          };
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (data["anomaly_score"] > 8.0)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.redAccent),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.warning, color: Colors.redAccent),
-                        SizedBox(width: 8),
-                        Expanded(child: Text("CRITICAL ALERT: High anomaly score detected. AI auto-patching recommended.", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))),
-                      ],
-                    ),
-                  ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_streamData["anomaly_score"] > 8.0)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.redAccent),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.redAccent),
+                    SizedBox(width: 8),
+                    Expanded(child: Text("CRITICAL ALERT: High anomaly score detected. AI auto-patching recommended.", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))),
+                  ],
+                ),
+              ),
                 Row(
                   children: [
                     Expanded(
@@ -154,11 +207,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const SizedBox(height: 8),
                             const Text('Active Threats', style: TextStyle(color: Colors.grey, fontSize: 12)),
                             const SizedBox(height: 4),
-                            const Text('3', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
+                            Text('${_streamData["threats"]}', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
                           ],
                         ),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    _buildStatCard(context, "Requests", "${_streamData["total_requests"]}", Icons.sync_alt, Colors.blueAccent),
+                    const SizedBox(width: 16),
+                    _buildStatCard(context, "Auth Fails", "${_streamData["auth_failures"]}", Icons.gavel, Colors.purpleAccent),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -173,9 +234,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           );
-        },
-      ),
-    );
   }
 
   Widget _buildQuickActions() {
@@ -195,9 +253,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildActionCard(Icons.code, 'GitHub PR Audit', Colors.purpleAccent, () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const GithubPrScreen()));
               }),
-              _buildActionCard(Icons.analytics, 'Run Deep Scan', Colors.cyanAccent, () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deep Scan triggered.')));
-              }),
+              _isDeepScanning 
+                ? const SizedBox(width: 140, child: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)))
+                : _buildActionCard(Icons.analytics, 'Run Deep Scan', Colors.cyanAccent, _runDeepScan),
               _buildActionCard(Icons.security, 'Lockdown System', Colors.redAccent, () {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System Lockdown triggered.')));
               }),
@@ -287,15 +345,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 3),
-                      FlSpot(1, 1),
-                      FlSpot(2, 4),
-                      FlSpot(3, 2),
-                      FlSpot(4, 5),
-                      FlSpot(5, 3),
-                      FlSpot(6, 4),
-                    ],
+                    spots: _trafficSpots,
                     isCurved: true,
                     color: Theme.of(context).colorScheme.primary,
                     barWidth: 4,
@@ -308,6 +358,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
             ),
           ),
         ],
