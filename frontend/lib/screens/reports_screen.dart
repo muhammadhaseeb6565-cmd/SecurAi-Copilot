@@ -212,7 +212,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           return RefreshIndicator(
             onRefresh: () async {
               setState(() {
-                _alertsFuture = _apiService.fetchRealAlerts();
+                _alertsFuture = _apiService.fetchRealAlerts(_urlController.text.trim());
               });
             },
             child: ListView.builder(

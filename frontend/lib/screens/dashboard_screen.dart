@@ -132,8 +132,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  void _runDeepScan() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportsScreen()));
+  }
+
   void _runBreachScan() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const DataBreachScreen()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => DataBreachScreen()));
   }
 
   void _showNotifications() {
@@ -294,7 +298,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 24),
               ],
             ),
-          );
+          ),
+    );
   }
 
   Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color) {
@@ -655,29 +660,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _getDayLabel(int index) {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return days[index % 7];
-  }
-
-  Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color) {
-    return Expanded(
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 8),
-            Text(title, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
-            const SizedBox(height: 4),
-            Text(value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    );
   }
 }
