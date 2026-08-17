@@ -132,9 +132,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _runDeepScan() {
-    // Navigate to Reports Screen where the user can enter a URL to scan
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportsScreen()));
+  void _runBreachScan() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const DataBreachScreen()));
+  }
+
+  void _showNotifications() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.notifications_active, color: Colors.cyanAccent),
+                  SizedBox(width: 8),
+                  Text('Notification Center', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const Divider(height: 32),
+              ListTile(
+                leading: const Icon(Icons.warning, color: Colors.orangeAccent),
+                title: const Text('Unusual Traffic Spike', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('API received 500+ requests in 1 min.'),
+                trailing: const Text('2m ago', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.error, color: Colors.redAccent),
+                title: const Text('Failed SSH Logins', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Multiple failed auth attempts on Prod DB.'),
+                trailing: const Text('15m ago', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.security_update, color: Colors.greenAccent),
+                title: const Text('Patch Deployed', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Self-healing patch v1.2 applied successfully.'),
+                trailing: const Text('1h ago', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              ),
+            ],
+          ),
+        );
+      }
+    );
   }
 
   @override
@@ -143,6 +187,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Real-Time Security Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Badge(
+              label: Text('3'),
+              child: Icon(Icons.notifications),
+            ),
+            onPressed: _showNotifications,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -237,13 +290,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 24),
                 _buildShodanSearch(),
                 const SizedBox(height: 24),
-                _buildGlobalThreatMap(),
-                const SizedBox(height: 24),
                 _buildTrafficGraph(),
                 const SizedBox(height: 24),
               ],
             ),
           );
+  }
+
+  Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildLiveAlertsFeed() {
@@ -318,11 +390,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _isDeepScanning 
                 ? const SizedBox(width: 140, child: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)))
                 : _buildActionCard(Icons.analytics, 'Run Deep Scan', Colors.cyanAccent, _runDeepScan),
+              _buildActionCard(Icons.travel_explore, 'Breach Scan', Colors.orangeAccent, _runBreachScan),
               _buildActionCard(Icons.security, 'Lockdown System', Colors.redAccent, () {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System Lockdown triggered.')));
-              }),
-              _buildActionCard(Icons.cloud_download, 'Export Logs', Colors.greenAccent, () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logs exported.')));
               }),
             ],
           ),

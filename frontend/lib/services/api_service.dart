@@ -90,6 +90,24 @@ class ApiService {
     ];
   }
 
+  Future<Map<String, dynamic>> breachScan(String email) async {
+    try {
+      final url = await baseUrl;
+      final response = await http.post(
+        Uri.parse('$url/breach-scan'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"email": email}),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      debugPrint('Error fetching breach scan: $e');
+    }
+    return {"found": false, "breaches": []};
+  }
+
   static Future<Map<String, dynamic>?> fetchSystemMetrics() async {
     try {
       final url = await getBaseUrl();

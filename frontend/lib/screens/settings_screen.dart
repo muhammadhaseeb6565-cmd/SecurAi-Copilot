@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 
+import 'dart:convert';
+
 class SettingsScreen extends StatefulWidget {
   final SharedPreferences prefs;
 
@@ -15,6 +17,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedPersona = "auditor";
   String _selectedLanguage = "English";
+  bool _requireBiometrics = false;
   final TextEditingController _apiUrlController = TextEditingController();
 
   @override
@@ -22,6 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _selectedPersona = widget.prefs.getString('persona') ?? "auditor";
     _selectedLanguage = widget.prefs.getString('language') ?? "English";
+    _requireBiometrics = widget.prefs.getBool('requireBiometrics') ?? false;
     _apiUrlController.text = widget.prefs.getString('api_base_url') ?? "https://securai-copilot.onrender.com";
   }
 
@@ -29,6 +33,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _apiUrlController.dispose();
     super.dispose();
+  }
+
+  void _exportData() {
+    final allKeys = widget.prefs.getKeys();
+    final Map<String, dynamic> data = {};
+    for (var key in allKeys) {
+      data[key] = widget.prefs.get(key);
+    }
+    
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text('Exported User Data', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Text(jsonStr, style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close"),
+          )
+        ],
+      )
+    );
   }
 
   void _saveLanguage(String? value) {
@@ -41,6 +75,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SnackBar(content: Text('Language updated to $value')),
       );
     }
+  }
+
+  void _saveBiometrics(bool value) {
+    setState(() {
+      _requireBiometrics = value;
+      widget.prefs.setBool('requireBiometrics', value);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(value ? 'Biometric App Lock Enabled' : 'Biometric App Lock Disabled')),
+    );
   }
 
   void _savePersona(String? value) {
@@ -75,6 +119,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Text('Security & Privacy', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+          SwitchListTile(
+            title: const Text('Require Biometrics'),
+            subtitle: const Text('Use Fingerprint/FaceID to unlock the app'),
+            secondary: const Icon(Icons.fingerprint),
+            value: _requireBiometrics,
+            onChanged: _saveBiometrics,
+          ),
+          const Divider(),
+          const SizedBox(height: 16),
           Text('Appearance', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
           SwitchListTile(
             title: const Text('Dark Mode'),

@@ -130,6 +130,32 @@ def url_scan(request: UrlScanRequest):
     except Exception as e:
         return {"alerts": [{"title": "Scanner Error", "severity": "High", "time": "Just now", "details": str(e)}]}
 
+class BreachScanRequest(BaseModel):
+    email: str
+
+@app.post("/breach-scan")
+def breach_scan(request: BreachScanRequest):
+    # Simulated Have I Been Pwned API response for demo purposes
+    email = request.email.lower()
+    
+    # Generate some realistic mock breaches based on the email domain
+    breaches = []
+    if "admin" in email or "test" in email or "demo" in email:
+        breaches.append({
+            "name": "LinkedIn (2012)",
+            "date": "2012-05-05",
+            "dataclasses": ["Email addresses", "Passwords"],
+            "description": "In 2012, LinkedIn had 164 million email addresses and passwords exposed."
+        })
+        breaches.append({
+            "name": "Canva",
+            "date": "2019-05-24",
+            "dataclasses": ["Email addresses", "Passwords", "Names", "Usernames"],
+            "description": "In May 2019, graphic design site Canva suffered a data breach that impacted 137 million subscribers."
+        })
+        
+    return {"breaches": breaches, "found": len(breaches) > 0}
+
 @app.get("/system-metrics")
 def system_metrics():
     try:

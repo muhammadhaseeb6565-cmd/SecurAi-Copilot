@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/splash_screen.dart';
@@ -108,11 +110,102 @@ class AuthGuard extends StatelessWidget {
         }
         final session = snapshot.data?.session ?? supabase.auth.currentSession;
         if (session != null) {
-          return MainShell(prefs: prefs);
+          return BiometricGuard(prefs: prefs, child: MainShell(prefs: prefs));
         }
         // If not logged in, go to LoginScreen
         return LoginScreen(prefs: prefs);
       },
     );
+  }
+}
+
+class BiometricGuard extends StatefulWidget {
+  final SharedPreferences prefs;
+  final Widget child;
+
+  const BiometricGuard({super.key, required this.prefs, required this.child});
+
+  @override
+  State<BiometricGuard> createState() => _BiometricGuardState();
+}
+
+class _BiometricGuardState extends State<BiometricGuard> {
+  final LocalAuthentication auth = LocalAuthentication();
+  bool _isAuthenticated = false;
+  bool _isChecking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    final requireBiometrics = widget.prefs.getBool('requireBiometrics') ?? false;
+    if (!requireBiometrics) {
+      if (mounted) setState(() { _isAuthenticated = true; _isChecking = false; });
+      return;
+    }
+
+    try {
+      final canCheck = await auth.canCheckBiometrics || await auth.isDeviceSupported();
+      if (!canCheck) {
+        if (mounted) setState(() { _isAuthenticated = true; _isChecking = false; });
+        return;
+      }
+
+      final authenticated = await auth.authenticate(
+        localizedReason: 'Please authenticate to access SecurAI Copilot',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: false,
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _isAuthenticated = authenticated;
+          _isChecking = false;
+        });
+      }
+    } on PlatformException catch (_) {
+      if (mounted) setState(() { _isAuthenticated = false; _isChecking = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isChecking) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)));
+    }
+
+    if (!_isAuthenticated) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock, size: 80, color: Colors.redAccent),
+              const SizedBox(height: 24),
+              const Text("App Locked", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text("Biometric authentication required.", style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: _checkBiometrics,
+                icon: const Icon(Icons.fingerprint),
+                label: const Text("Unlock"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.cyanAccent.withValues(alpha: 0.2),
+                  foregroundColor: Colors.cyanAccent,
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    }
+
+    return widget.child;
   }
 }
