@@ -294,6 +294,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 24),
                 _buildShodanSearch(),
                 const SizedBox(height: 24),
+                _buildGlobalThreatMap(),
+                const SizedBox(height: 24),
                 _buildTrafficGraph(),
                 const SizedBox(height: 24),
               ],
