@@ -251,6 +251,63 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _showSystemStatus() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return FutureBuilder<Map<String, dynamic>?>(
+          future: ApiService.fetchSystemMetrics(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(height: 250, child: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)));
+            }
+            final metrics = snapshot.data;
+            if (metrics == null) {
+              return const SizedBox(height: 250, child: Center(child: Text('Could not fetch system status.', style: TextStyle(color: Colors.redAccent))));
+            }
+            
+            return Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.security, color: Colors.cyanAccent),
+                      SizedBox(width: 8),
+                      Text('Live Security & Health Status', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const Divider(height: 32),
+                  _buildStatusRow('System Health', '${(metrics['system_health'] ?? 0).toStringAsFixed(1)}%', Icons.favorite, Colors.greenAccent),
+                  const SizedBox(height: 16),
+                  _buildStatusRow('CPU Usage', '${(metrics['cpu_percent'] ?? 0).toStringAsFixed(1)}%', Icons.memory, Colors.orangeAccent),
+                  const SizedBox(height: 16),
+                  _buildStatusRow('Memory Usage', '${(metrics['ram_percent'] ?? 0).toStringAsFixed(1)}%', Icons.storage, Colors.purpleAccent),
+                ],
+              ),
+            );
+          }
+        );
+      }
+    );
+  }
+
+  Widget _buildStatusRow(String title, String value, IconData icon, Color color) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(width: 16),
+        Text(title, style: const TextStyle(fontSize: 16)),
+        const Spacer(),
+        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+      ],
+    );
+  }
+
   Widget _buildChatBubble(Map<String, String> msg, int index) {
     final isUser = msg["sender"] == "user";
     final theme = Theme.of(context);
@@ -363,7 +420,8 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.security),
-            onPressed: () {},
+            onPressed: _showSystemStatus,
+            tooltip: 'System Status',
           ),
         ],
       ),
