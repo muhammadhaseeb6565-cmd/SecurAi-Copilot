@@ -16,12 +16,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
   bool _isGenerating = false;
   String? _generatedReport;
   
-  late Future<List<Map<String, dynamic>>> _alertsFuture;
+  Future<List<Map<String, dynamic>>>? _alertsFuture;
+  final TextEditingController _urlController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _alertsFuture = _apiService.fetchRealAlerts();
+  }
+
+  void _startScan() {
+    final url = _urlController.text.trim();
+    if (url.isEmpty) return;
+    
+    setState(() {
+      _alertsFuture = _apiService.fetchRealAlerts(url);
+    });
   }
 
   void _generateReport(String details) async {
@@ -143,9 +152,54 @@ class _ReportsScreenState extends State<ReportsScreen> {
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _alertsFuture,
-        builder: (context, snapshot) {
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _urlController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter target URL (e.g., example.com)',
+                      prefixIcon: const Icon(Icons.language, color: Colors.cyanAccent),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
+                    ),
+                    onSubmitted: (_) => _startScan(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _startScan,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.cyanAccent.withValues(alpha: 0.1),
+                    foregroundColor: Colors.cyanAccent,
+                    padding: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Icon(Icons.search),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _alertsFuture == null 
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.radar, size: 80, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
+                      const SizedBox(height: 16),
+                      Text("Enter a website URL to begin Deep Scan", style: TextStyle(color: Colors.grey[600])),
+                    ],
+                  ),
+                )
+              : FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _alertsFuture,
+                  builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -265,6 +319,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
           );
         },
+      ),
+          ),
+        ],
       ),
     );
   }

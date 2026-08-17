@@ -61,48 +61,71 @@ def generate_patch(request: ReportRequest):
     response = generate_code_patch(request.alert_details)
     return {"patch": response}
 
-@app.get("/run-scan")
-def run_scan():
+class UrlScanRequest(BaseModel):
+    url: str
+
+@app.post("/url-scan")
+def url_scan(request: UrlScanRequest):
     try:
-        bandit_result = subprocess.run(["bandit", "-r", "core", "main.py", "-f", "json"], capture_output=True, text=True)
-        try:
-            bandit_data = json.loads(bandit_result.stdout)
-            bandit_issues = bandit_data.get("results", [])
-        except Exception:
-            bandit_issues = []
-
-        safety_result = subprocess.run(["safety", "check", "-r", "requirements.txt", "--json"], capture_output=True, text=True)
-        try:
-            safety_data = json.loads(safety_result.stdout)
-            safety_issues = safety_data.get("vulnerabilities", [])
-        except Exception:
-            safety_issues = []
-
-        alerts = []
-        for issue in bandit_issues:
-            alerts.append({
-                "title": f"Code Flaw: {issue.get('issue_text')}",
-                "severity": issue.get('issue_severity', 'MEDIUM').capitalize(),
-                "time": "Just now",
-                "details": f"File: {issue.get('filename')}\nLine: {issue.get('line_number')}\nCode:\n{issue.get('code')}"
-            })
+        url = request.url
+        if not url.startswith("http"):
+            url = "http://" + url
             
-        for issue in safety_issues:
+        alerts = []
+        try:
+            resp = requests.get(url, timeout=5)
+            headers = resp.headers
+            
+            # Check security headers
+            if "Strict-Transport-Security" not in headers:
+                alerts.append({
+                    "title": "Missing HSTS Header",
+                    "severity": "High",
+                    "time": "Just now",
+                    "details": "The site is not enforcing HTTP Strict Transport Security (HSTS), leaving it vulnerable to MITM downgrade attacks."
+                })
+            
+            if "X-Frame-Options" not in headers and "Content-Security-Policy" not in headers:
+                alerts.append({
+                    "title": "Missing Clickjacking Protection",
+                    "severity": "Medium",
+                    "time": "Just now",
+                    "details": "Neither X-Frame-Options nor a frame-ancestors CSP directive is present. Vulnerable to Clickjacking."
+                })
+                
+            if "X-Content-Type-Options" not in headers:
+                alerts.append({
+                    "title": "Missing MIME Sniffing Protection",
+                    "severity": "Low",
+                    "time": "Just now",
+                    "details": "X-Content-Type-Options: nosniff is missing. Browsers may interpret files as different MIME types."
+                })
+                
+            server = headers.get("Server", "")
+            if server:
+                alerts.append({
+                    "title": "Server Information Disclosure",
+                    "severity": "Low",
+                    "time": "Just now",
+                    "details": f"The server is exposing its software version: {server}. This assists attackers in finding CVEs."
+                })
+                
+            if not alerts:
+                alerts.append({
+                    "title": "Basic Headers Secure",
+                    "severity": "Low",
+                    "time": "Just now",
+                    "details": "Target URL implements standard security headers successfully."
+                })
+                
+        except requests.exceptions.RequestException as e:
             alerts.append({
-                "title": f"Vulnerable Dependency: {issue.get('package_name')}",
+                "title": "Connection Failed",
                 "severity": "High",
                 "time": "Just now",
-                "details": f"Version {issue.get('analyzed_version')} is vulnerable to {issue.get('vulnerability_id')}.\nAdvisory: {issue.get('advisory')}"
+                "details": f"Could not connect to {url}. Error: {str(e)}"
             })
-            
-        if not alerts:
-            alerts.append({
-                "title": "All Checks Passed",
-                "severity": "Low",
-                "time": "Just now",
-                "details": "Bandit and Safety found no critical vulnerabilities in your codebase."
-            })
-            
+
         return {"alerts": alerts}
     except Exception as e:
         return {"alerts": [{"title": "Scanner Error", "severity": "High", "time": "Just now", "details": str(e)}]}

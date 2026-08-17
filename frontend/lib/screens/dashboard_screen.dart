@@ -6,6 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../services/api_service.dart';
 import 'github_pr_screen.dart';
+import 'reports_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -131,44 +132,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  Future<void> _runDeepScan() async {
-    setState(() => _isDeepScanning = true);
-    final alerts = await _apiService.fetchRealAlerts();
-    setState(() => _isDeepScanning = false);
-    if (!mounted) return;
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text('Deep Scan Results', style: TextStyle(color: Colors.cyanAccent)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: alerts.isEmpty 
-            ? const Text("No vulnerabilities found.", style: TextStyle(color: Colors.greenAccent))
-            : ListView.builder(
-                shrinkWrap: true,
-                itemCount: alerts.length,
-                itemBuilder: (context, i) {
-                  return ListTile(
-                    leading: Icon(
-                      alerts[i]['severity'] == 'High' ? Icons.error : Icons.warning,
-                      color: alerts[i]['severity'] == 'High' ? Colors.redAccent : Colors.orangeAccent
-                    ),
-                    title: Text(alerts[i]['title'] ?? 'Alert', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(alerts[i]['details'] ?? '', maxLines: 3, overflow: TextOverflow.ellipsis),
-                  );
-                }
-              ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context), 
-            child: const Text('Close', style: TextStyle(color: Colors.cyanAccent))
-          )
-        ],
-      )
-    );
+  void _runDeepScan() {
+    // Navigate to Reports Screen where the user can enter a URL to scan
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportsScreen()));
   }
 
   @override

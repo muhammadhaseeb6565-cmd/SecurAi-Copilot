@@ -63,21 +63,31 @@ class ApiService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchRealAlerts() async {
-    final url = await baseUrl;
+  Future<List<Map<String, dynamic>>> fetchRealAlerts(String targetUrl) async {
     try {
-      final response = await http.get(Uri.parse('$url/run-scan'));
+      final url = await baseUrl;
+      final response = await http.post(
+        Uri.parse('$url/url-scan'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"url": targetUrl}),
+      ).timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final List<dynamic> alertsData = data['alerts'] ?? [];
-        return alertsData.map((e) => Map<String, dynamic>.from(e)).toList();
+        final alerts = data['alerts'] as List;
+        return alerts.cast<Map<String, dynamic>>();
       }
-      print('Error fetching real alerts: $response.statusCode');
-      return [];
     } catch (e) {
-      print('Error fetching real alerts: $e');
-      return [];
+      debugPrint('Error fetching real alerts: $e');
     }
+    return [
+      {
+        "title": "Scanner Error",
+        "severity": "High",
+        "time": "Just now",
+        "details": "Could not execute scan on the specified URL. Please check the backend connection."
+      }
+    ];
   }
 
   static Future<Map<String, dynamic>?> fetchSystemMetrics() async {
