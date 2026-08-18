@@ -20,6 +20,11 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
+      // Background isolates must initialize their own plugins
+      const AndroidInitializationSettings initSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
+      const InitializationSettings initSettings = InitializationSettings(android: initSettingsAndroid);
+      await flutterLocalNotificationsPlugin.initialize(initSettings);
+
       final response = await http.get(Uri.parse('https://cve.circl.lu/api/last')).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final cves = jsonDecode(response.body) as List<dynamic>;
