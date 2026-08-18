@@ -51,6 +51,23 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> sendMessage(String message, String persona, String endpoint) async {
+    try {
+      final url = await baseUrl;
+      final response = await http.post(
+        Uri.parse("$url/$endpoint"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"message": message, "persona": persona, "language": "en"}),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception("Server returned " + response.statusCode.toString());
+      }
+    } catch (e) {
+      throw Exception("Failed to connect: $e");
+    }
+  }
   Future<String> generateReport(String alertDetails) async {
     return _postRequest('/generate-report', alertDetails, 'report');
   }

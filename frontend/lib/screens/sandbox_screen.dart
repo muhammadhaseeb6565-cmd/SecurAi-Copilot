@@ -26,7 +26,7 @@ class _SandboxScreenState extends State<SandboxScreen> {
       final response = await ApiService().sendMessage(
         _inputController.text.trim(),
         "sandbox",
-        "phishing-analyze",
+        "analyze-phishing",
       );
       setState(() {
         _result = response['response'];
