@@ -58,41 +58,59 @@ void callbackDispatcher() {
 final supabase = Supabase.instance.client;
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    // Initialize Local Notifications
+    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
+    const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
-  Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: false,
-  );
-  Workmanager().registerPeriodicTask(
-    "1",
-    "cveCheckTask",
-    frequency: const Duration(minutes: 15),
-    constraints: Constraints(
-      networkType: NetworkType.connected,
-    ),
-  );
-  
-  await Supabase.initialize(
-    url: 'https://rnjffzwflbbyznzhcqpg.supabase.co',
-    anonKey: 'sb_publishable_AGB2Fv2K6FXtyVeVLa_tWA_LE4foSrP',
-  );
+    await Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: false,
+    );
+    
+    Workmanager().registerPeriodicTask(
+      "1",
+      "cveCheckTask",
+      frequency: const Duration(minutes: 15),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ),
+    );
+    
+    await Supabase.initialize(
+      url: 'https://rnjffzwflbbyznzhcqpg.supabase.co',
+      anonKey: 'sb_publishable_AGB2Fv2K6FXtyVeVLa_tWA_LE4foSrP',
+    );
 
-  // Commented out to allow screenshots during development
-  // if (Platform.isAndroid && kReleaseMode) {
-  //   await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
-  // }
-  final prefs = await SharedPreferences.getInstance();
-  
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(prefs),
-      child: SecurAIApp(prefs: prefs),
-    ),
-  );
+    final prefs = await SharedPreferences.getInstance();
+    
+    runApp(
+      ChangeNotifierProvider(
+        create: (_) => ThemeProvider(prefs),
+        child: SecurAIApp(prefs: prefs),
+      ),
+    );
+  } catch (e, stackTrace) {
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Text(
+                'Fatal Startup Error:\n$e\n\n$stackTrace',
+                style: const TextStyle(color: Colors.red, fontSize: 14),
+                textDirection: TextDirection.ltr,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class ThemeProvider extends ChangeNotifier {
@@ -309,3 +327,4 @@ class _BiometricGuardState extends State<BiometricGuard> {
     return widget.child;
   }
 }
+
