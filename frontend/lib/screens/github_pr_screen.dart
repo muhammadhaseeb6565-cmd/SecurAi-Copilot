@@ -9,8 +9,8 @@ class GithubPrScreen extends StatefulWidget {
 }
 
 class _GithubPrScreenState extends State<GithubPrScreen> {
-  final _repoController = TextEditingController(text: 'muhammadhaseeb6565-cmd/SecurAi-Copilot');
-  final _prController = TextEditingController(text: '1');
+  final _repoController = TextEditingController();
+  final _prController = TextEditingController();
   final _patController = TextEditingController();
   
   bool _isLoading = false;
