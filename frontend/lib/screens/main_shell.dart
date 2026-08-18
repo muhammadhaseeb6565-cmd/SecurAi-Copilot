@@ -47,7 +47,7 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _createNewChat() async {
-    final title = "Session " + "" + "\:\";
+    final title = "Session " + DateTime.now().hour.toString() + ":" + DateTime.now().minute.toString();
     try {
       final response = await supabase.from('chat_sessions').insert({
         'title': title,
