@@ -8,6 +8,8 @@ import 'network_map_screen.dart';
 import 'training_screen.dart';
 import 'cve_feed_screen.dart';
 import 'utilities_screen.dart';
+import 'sandbox_screen.dart';
+import 'iac_auditor_screen.dart';
 import '../main.dart';
 
 class MainShell extends StatefulWidget {
@@ -97,25 +99,6 @@ class _MainShellState extends State<MainShell> {
                 Icon(Icons.security, size: 48, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(height: 12),
                 Text(
-                  'SecurAI Copilot',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.add_comment),
-            title: const Text('New Chat'),
-            onTap: _createNewChat,
-          ),
-          ListTile(
-            leading: const Icon(Icons.bug_report, color: Colors.cyanAccent),
-            title: const Text('Live Zero-Day Feed'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const CveFeedScreen()));
-            },
-          ),
           ListTile(
             leading: const Icon(Icons.security, color: Colors.cyanAccent),
             title: const Text('Crypto Utilities'),
@@ -226,3 +209,4 @@ class _MainShellState extends State<MainShell> {
     );
   }
 }
+

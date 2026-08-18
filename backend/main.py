@@ -265,3 +265,42 @@ async def metrics_stream():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+@app.post("/analyze-phishing")
+async def analyze_phishing(request: ChatRequest):
+    system_prompt = \"\"\"You are an expert Phishing and Social Engineering Analyst. 
+The user will provide an email, SMS, or URL. 
+Analyze the psychological tactics (urgency, authority, fear), extract any URLs, and assess the threat level. 
+End your response with a definitive SCORE out of 100 (where 100 is highly malicious) and a VERDICT (Safe, Suspicious, or Malicious).\"\"\"
+    try:
+        completion = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": request.message}
+            ],
+            temperature=0.2,
+            max_tokens=1024,
+        )
+        return {"response": completion.choices[0].message.content, "model": "llama-3.3-70b-versatile"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/audit-iac")
+async def audit_iac(request: ChatRequest):
+    system_prompt = \"\"\"You are an elite DevSecOps Cloud Auditor.
+The user will provide an Infrastructure as Code (IaC) snippet, such as a Dockerfile, kubernetes.yaml, or docker-compose.yaml.
+Scan the file line-by-line for privilege escalations (e.g., USER root), hardcoded secrets, excessive permissions, and missing security boundaries.
+Provide a rewritten, highly secure version of the file in a markdown code block.\"\"\"
+    try:
+        completion = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": request.message}
+            ],
+            temperature=0.1,
+            max_tokens=2048,
+        )
+        return {"response": completion.choices[0].message.content, "model": "llama-3.3-70b-versatile"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -41,3 +41,5 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  workmanager: ^0.5.2
+  flutter_local_notifications: ^17.2.1

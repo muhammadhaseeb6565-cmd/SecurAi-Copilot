@@ -9,11 +9,72 @@ import 'package:flutter/services.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/splash_screen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:workmanager/workmanager.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    try {
+      final response = await http.get(Uri.parse('https://cve.circl.lu/api/last')).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        final cves = jsonDecode(response.body) as List<dynamic>;
+        if (cves.isNotEmpty) {
+          final topCve = cves.first;
+          final cvss = (topCve['cvss'] ?? 0.0).toDouble();
+          
+          if (cvss >= 7.0) {
+            const AndroidNotificationDetails androidPlatformChannelSpecifics =
+                AndroidNotificationDetails(
+              'securai_cve_channel',
+              'Critical CVE Alerts',
+              channelDescription: 'Alerts for high severity vulnerabilities',
+              importance: Importance.max,
+              priority: Priority.high,
+            );
+            const NotificationDetails platformChannelSpecifics =
+                NotificationDetails(android: androidPlatformChannelSpecifics);
+            
+            await flutterLocalNotificationsPlugin.show(
+              0,
+              'CRITICAL THREAT: ',
+              'CVSS : '.substring(0, 100) + '...',
+              platformChannelSpecifics,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Background task error: ');
+    }
+    return Future.value(true);
+  });
+}
 
 final supabase = Supabase.instance.client;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false,
+  );
+  Workmanager().registerPeriodicTask(
+    "1",
+    "cveCheckTask",
+    frequency: const Duration(minutes: 15),
+    constraints: Constraints(
+      networkType: NetworkType.connected,
+    ),
+  );
   
   await Supabase.initialize(
     url: 'https://rnjffzwflbbyznzhcqpg.supabase.co',
