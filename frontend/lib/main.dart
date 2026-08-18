@@ -92,7 +92,7 @@ class SecurAIApp extends StatelessWidget {
           centerTitle: true,
           titleTextStyle: GoogleFonts.orbitron(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF00FFFF)),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: const Color(0xFF0D0D12),
           elevation: 10,
           shadowColor: const Color(0xFF00FFFF).withValues(alpha: 0.3),

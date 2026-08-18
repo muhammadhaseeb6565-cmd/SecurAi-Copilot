@@ -183,7 +183,7 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
                                 : const Icon(Icons.healing),
                             label: const Text('Deploy Fix'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.magentaAccent,
+                              backgroundColor: Colors.pinkAccent,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
