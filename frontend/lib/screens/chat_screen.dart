@@ -340,7 +340,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: isUser 
-                ? Text(
+                ? SelectableText(
                     msg["text"]!,
                     style: TextStyle(color: theme.colorScheme.onPrimary),
                   )
@@ -427,6 +427,50 @@ class _ChatScreenState extends State<ChatScreen> {
             tooltip: 'System Status',
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: Container(
+          color: Theme.of(context).colorScheme.surface,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Icon(Icons.history, color: Colors.white, size: 32),
+                    SizedBox(height: 8),
+                    Text('Chat History', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              if (_messages.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text("No history yet.", style: TextStyle(color: Colors.grey)),
+                )
+              else
+                ..._messages.where((m) => m["sender"] == "user").map((msg) {
+                  return ListTile(
+                    leading: const Icon(Icons.chat_bubble_outline, color: Colors.cyanAccent),
+                    title: Text(
+                      msg["text"]!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  );
+                }),
+            ],
+          ),
+        ),
       ),
       body: Column(
         children: [
