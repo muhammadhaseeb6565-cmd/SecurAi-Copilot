@@ -17,6 +17,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedPersona = "auditor";
   String _selectedLanguage = "English";
+  String _selectedAiModel = "openai/gpt-oss-20b";
   bool _requireBiometrics = false;
   final TextEditingController _apiUrlController = TextEditingController();
 
@@ -25,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _selectedPersona = widget.prefs.getString('persona') ?? "auditor";
     _selectedLanguage = widget.prefs.getString('language') ?? "English";
+    _selectedAiModel = widget.prefs.getString('ai_model') ?? "openai/gpt-oss-20b";
     _requireBiometrics = widget.prefs.getBool('requireBiometrics') ?? false;
     _apiUrlController.text = widget.prefs.getString('api_base_url') ?? "https://securai-copilot.onrender.com";
   }
@@ -59,6 +61,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Language updated to $value')),
+      );
+    }
+  }
+
+  void _saveAiModel(String? value) {
+    if (value != null) {
+      setState(() {
+        _selectedAiModel = value;
+        widget.prefs.setString('ai_model', value);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('AI Model updated to $value')),
       );
     }
   }
@@ -130,6 +144,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (val) {
               themeProvider.toggleTheme(val);
             },
+          ),
+          const Divider(),
+          const SizedBox(height: 16),
+          Text('AI Model Selection', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Card(
+            color: Theme.of(context).colorScheme.surface,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: _selectedAiModel,
+                  items: const [
+                    DropdownMenuItem(value: "openai/gpt-oss-20b", child: Text("GPT-OSS 20B (Recommended)")),
+                    DropdownMenuItem(value: "openai/gpt-oss-120b", child: Text("GPT-OSS 120B (Powerful)")),
+                    DropdownMenuItem(value: "llama-3.3-70b-versatile", child: Text("Llama 3.3 70B")),
+                    DropdownMenuItem(value: "gemma2-9b-it", child: Text("Gemma 2 9B")),
+                    DropdownMenuItem(value: "mixtral-8x7b-32768", child: Text("Mixtral 8x7B")),
+                  ],
+                  onChanged: _saveAiModel,
+                ),
+              ),
+            ),
           ),
           const Divider(),
           const SizedBox(height: 16),

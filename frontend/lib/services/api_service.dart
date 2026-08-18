@@ -9,15 +9,21 @@ class ApiService {
     return prefs.getString('api_base_url') ?? "https://securai-copilot.onrender.com";
   }
 
+  static Future<String> getAiModel() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('ai_model') ?? "openai/gpt-oss-20b";
+  }
+
   Future<String> get baseUrl async => await getBaseUrl();
 
   Stream<String> streamMessage(String message, String persona, String language) async* {
     final client = http.Client();
     try {
       final url = await baseUrl;
+      final model = await getAiModel();
       final request = http.Request('POST', Uri.parse('$url/chat'));
       request.headers['Content-Type'] = 'application/json';
-      request.body = jsonEncode({"message": message, "persona": persona, "language": language});
+      request.body = jsonEncode({"message": message, "persona": persona, "language": language, "model": model});
 
       final response = await client.send(request);
       
@@ -47,10 +53,11 @@ class ApiService {
   Future<String> _postRequest(String endpoint, String alertDetails, String key) async {
     try {
       final url = await baseUrl;
+      final model = await getAiModel();
       final response = await http.post(
         Uri.parse('$url$endpoint'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({"alert_details": alertDetails}),
+        body: jsonEncode({"alert_details": alertDetails, "model": model}),
       );
       
       if (response.statusCode == 200) {

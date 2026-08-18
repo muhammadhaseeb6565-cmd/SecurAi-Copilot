@@ -24,12 +24,14 @@ class ChatRequest(BaseModel):
     message: str
     persona: str = "auditor"
     language: str = "English"
+    model: str = "openai/gpt-oss-20b"
 
 class CodeRequest(BaseModel):
     code: str
 
 class ReportRequest(BaseModel):
     alert_details: str
+    model: str = "openai/gpt-oss-20b"
 
 class ShodanRequest(BaseModel):
     ip: str
@@ -47,18 +49,18 @@ def read_root():
 @app.post("/chat")
 def chat(request: ChatRequest):
     return StreamingResponse(
-        stream_security_copilot(request.message, request.persona, request.language), 
+        stream_security_copilot(request.message, request.persona, request.language, request.model), 
         media_type="text/event-stream"
     )
 
 @app.post("/generate-report")
 def generate_report(request: ReportRequest):
-    response = generate_incident_report(request.alert_details)
+    response = generate_incident_report(request.alert_details, request.model)
     return {"report": response}
 
 @app.post("/generate-patch")
 def generate_patch(request: ReportRequest):
-    response = generate_code_patch(request.alert_details)
+    response = generate_code_patch(request.alert_details, request.model)
     return {"patch": response}
 
 class UrlScanRequest(BaseModel):
