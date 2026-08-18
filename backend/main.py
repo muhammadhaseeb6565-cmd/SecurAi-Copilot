@@ -245,10 +245,17 @@ def github_auto_fix(request: GithubFixRequest):
     except Exception as e:
         return {"error": str(e)}
 
+import psutil
+
 async def metrics_generator():
     while True:
-        # Simulate live API traffic data
+        cpu = psutil.cpu_percent(interval=None)
+        ram = psutil.virtual_memory().percent
+        system_health = max(0.0, 100.0 - ((cpu + ram) / 2))
         data = {
+            "system_health": round(system_health, 1),
+            "cpu_percent": cpu,
+            "ram_percent": ram,
             "total_requests": random.randint(1000, 5000),
             "auth_failures": random.randint(10, 100),
             "shadow_apis_detected": random.randint(0, 5),

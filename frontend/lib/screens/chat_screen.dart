@@ -537,11 +537,15 @@ class _ChatScreenState extends State<ChatScreen> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.attach_file, color: Colors.grey),
+                            padding: const EdgeInsets.only(left: 12, right: 4, top: 12, bottom: 12),
+                            constraints: const BoxConstraints(),
                             onPressed: _pickFile,
                             tooltip: "Upload File",
                           ),
                           IconButton(
                             icon: Icon(Icons.camera_alt, color: _imageBase64 != null ? Colors.cyanAccent : Colors.grey),
+                            padding: const EdgeInsets.only(left: 4, right: 8, top: 12, bottom: 12),
+                            constraints: const BoxConstraints(),
                             onPressed: _pickImage,
                             tooltip: "Upload Image for Vision AI",
                           ),
@@ -554,12 +558,17 @@ class _ChatScreenState extends State<ChatScreen> {
                               decoration: const InputDecoration(
                                 hintText: 'Message SecurAI...',
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                filled: false,
+                                contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 4),
                               ),
                             ),
                           ),
                           IconButton(
                             icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: _isListening ? Colors.red : Colors.grey),
+                            padding: const EdgeInsets.only(left: 8, right: 12, top: 12, bottom: 12),
+                            constraints: const BoxConstraints(),
                             onPressed: _isListening ? _stopListening : _startListening,
                             tooltip: "Voice to Text",
                           ),
