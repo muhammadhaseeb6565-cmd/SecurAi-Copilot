@@ -83,6 +83,28 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
   }
 
+  void _forgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter your email address in the field above")));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await supabase.auth.resetPasswordForEmail(email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Password reset email sent to $email"), backgroundColor: Colors.green));
+      }
+    } on AuthException catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: Colors.red));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -158,8 +180,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   onPressed: () => setState(() => _isSignUp = !_isSignUp),
                   child: Text(_isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"),
                 ),
-                const SizedBox(height: 16),
-                // Removed fake biometrics
+                TextButton(
+                  onPressed: _isLoading ? null : _forgotPassword,
+                  child: const Text("Forgot Password?", style: TextStyle(color: Colors.cyanAccent)),
+                ),
               ],
             ),
           ),
