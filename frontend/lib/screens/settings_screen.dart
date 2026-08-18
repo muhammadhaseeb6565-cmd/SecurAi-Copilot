@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
-
 import 'dart:convert';
+import 'package:flutter/services.dart';
 
 class SettingsScreen extends StatefulWidget {
   final SharedPreferences prefs;
@@ -44,24 +44,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
     
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text('Exported User Data', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Text(jsonStr, style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Close"),
-          )
-        ],
-      )
+    Clipboard.setData(ClipboardData(text: jsonStr));
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Data copied to clipboard!')),
     );
   }
 

@@ -257,10 +257,10 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
-        return FutureBuilder<Map<String, dynamic>?>(
-          future: ApiService.fetchSystemMetrics(),
+        return StreamBuilder<Map<String, dynamic>>(
+          stream: _apiService.streamMetrics(),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
               return const SizedBox(height: 250, child: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)));
             }
             final metrics = snapshot.data;
@@ -399,8 +399,11 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SecurAI Copilot', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        title: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text('SecurAI Copilot', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        centerTitle: false,
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         leading: IconButton(
