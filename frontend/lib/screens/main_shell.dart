@@ -47,7 +47,7 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _createNewChat() async {
-    final title = "Session ${DateTime.now().hour}:${DateTime.now().minute}";
+    final title = "Session " + "" + "\:\";
     try {
       final response = await supabase.from('chat_sessions').insert({
         'title': title,
@@ -99,6 +99,41 @@ class _MainShellState extends State<MainShell> {
                 Icon(Icons.security, size: 48, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(height: 12),
                 Text(
+                  'SecurAI Copilot',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.add_comment),
+            title: const Text('New Chat'),
+            onTap: _createNewChat,
+          ),
+          ListTile(
+            leading: const Icon(Icons.dangerous, color: Colors.redAccent),
+            title: const Text('AI Phishing Sandbox'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const SandboxScreen()));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.cloud, color: Colors.cyanAccent),
+            title: const Text('DevSecOps Cloud Auditor'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const IacAuditorScreen()));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.bug_report, color: Colors.cyanAccent),
+            title: const Text('Live Zero-Day Feed'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const CveFeedScreen()));
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.security, color: Colors.cyanAccent),
             title: const Text('Crypto Utilities'),
@@ -171,7 +206,7 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: _buildDrawer(), // Available across all tabs
+      drawer: _buildDrawer(),
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
@@ -209,4 +244,3 @@ class _MainShellState extends State<MainShell> {
     );
   }
 }
-
