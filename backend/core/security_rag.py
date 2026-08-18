@@ -20,7 +20,7 @@ async def stream_security_copilot(message: str, persona: str = "auditor", langua
         return
 
     try:
-        llm = ChatGroq(groq_api_key=api_key, model_name="llama-3.3-70b-versatile", streaming=True)
+        llm = ChatGroq(groq_api_key=api_key, model_name="openai/gpt-oss-20b", streaming=True)
         
         system_prompt = PERSONAS.get(persona, PERSONAS["auditor"])
         # Append the language constraint directly to the system prompt
@@ -47,7 +47,7 @@ def generate_incident_report(alert_details: str) -> str:
     if api_key == "mock_key_for_testing" or not api_key:
         return "# MOCK INCIDENT REPORT\nPlease set GROQ_API_KEY."
     
-    llm = ChatGroq(groq_api_key=api_key, model_name="llama-3.3-70b-versatile")
+    llm = ChatGroq(groq_api_key=api_key, model_name="openai/gpt-oss-20b")
     prompt = f"Generate a formal, professional Security Incident Report in Markdown for the following alert:\n{alert_details}"
     try:
         return llm.invoke(prompt).content
@@ -59,7 +59,7 @@ def generate_code_patch(alert_details: str) -> str:
     if api_key == "mock_key_for_testing" or not api_key:
         return "```python\n# Mock Patch\ndef fix_vulnerability():\n    pass\n```"
     
-    llm = ChatGroq(groq_api_key=api_key, model_name="llama-3.3-70b-versatile")
+    llm = ChatGroq(groq_api_key=api_key, model_name="openai/gpt-oss-20b")
     prompt = f"You are an expert Security Engineer. A vulnerability was detected: {alert_details}\nGenerate a secure code patch (in Python or Node.js) to fix this vulnerability. Output ONLY the markdown code block."
     try:
         return llm.invoke(prompt).content
