@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/api_service.dart';
 
 class GithubPrScreen extends StatefulWidget {
@@ -12,12 +13,32 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
   final _repoController = TextEditingController();
   final _prController = TextEditingController();
   final _patController = TextEditingController();
+  final _storage = const FlutterSecureStorage();
   
   bool _isLoading = false;
   String? _reviewResult;
   String? _error;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final savedRepo = await _storage.read(key: 'github_repo');
+    final savedPat = await _storage.read(key: 'github_pat');
+    if (savedRepo != null) _repoController.text = savedRepo;
+    if (savedPat != null) _patController.text = savedPat;
+  }
+
+  Future<void> _saveCredentials() async {
+    await _storage.write(key: 'github_repo', value: _repoController.text.trim());
+    await _storage.write(key: 'github_pat', value: _patController.text.trim());
+  }
+
   Future<void> _runReview() async {
+    await _saveCredentials();
     setState(() {
       _isLoading = true;
       _reviewResult = null;
@@ -47,6 +68,7 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
   Future<void> _deployFix() async {
     if (_reviewResult == null) return;
     
+    await _saveCredentials();
     setState(() {
       _isLoading = true;
     });
