@@ -44,10 +44,11 @@ class _SandboxScreenState extends State<SandboxScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Phishing Sandbox', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        iconTheme: const IconThemeData(color: Colors.cyanAccent),
+        title: const Text('AI Phishing Sandbox', style: TextStyle(fontWeight: FontWeight.bold)),
+        iconTheme: IconThemeData(color: theme.colorScheme.primary),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -56,10 +57,10 @@ class _SandboxScreenState extends State<SandboxScreen> {
             TextField(
               controller: _inputController,
               maxLines: 6,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Paste suspicious email, SMS, or URL here to safely detonate and analyze it...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -70,11 +71,11 @@ class _SandboxScreenState extends State<SandboxScreen> {
               child: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _analyze,
                 icon: _isLoading 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.cyanAccent, strokeWidth: 2))
+                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: theme.colorScheme.primary, strokeWidth: 2))
                     : const Icon(Icons.security),
                 label: Text(_isLoading ? 'Detonating...' : 'Analyze Threat'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent.withOpacity(0.2),
+                  backgroundColor: Colors.redAccent.withValues(alpha: 0.2),
                   foregroundColor: Colors.redAccent,
                   side: const BorderSide(color: Colors.redAccent, width: 1.5),
                 ),
@@ -87,15 +88,15 @@ class _SandboxScreenState extends State<SandboxScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
+                    border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                   ),
                   child: Markdown(
                     data: _result!,
                     styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(color: Colors.white70, fontSize: 16),
-                      strong: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+                      p: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16),
+                      strong: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

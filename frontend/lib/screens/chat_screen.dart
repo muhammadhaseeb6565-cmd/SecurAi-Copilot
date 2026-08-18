@@ -338,7 +338,9 @@ class _ChatScreenState extends State<ChatScreen> {
         margin: const EdgeInsets.symmetric(vertical: 8),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
         decoration: BoxDecoration(
-          color: isUser ? theme.colorScheme.primary.withValues(alpha: 0.15) : const Color(0xFF0D0D12),
+          color: isUser 
+              ? theme.colorScheme.primary.withValues(alpha: 0.15) 
+              : (theme.brightness == Brightness.dark ? const Color(0xFF0D0D12) : theme.colorScheme.surface),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(2),
             topRight: const Radius.circular(16),
@@ -365,7 +367,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: isUser 
                 ? SelectableText(
                     msg["text"]!,
-                    style: TextStyle(color: theme.colorScheme.onPrimary),
+                    style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
                   )
                 : MarkdownBody(
                     data: msg["text"]!.isEmpty ? "..." : msg["text"]!,
@@ -373,12 +375,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     styleSheet: MarkdownStyleSheet(
                       p: TextStyle(color: theme.colorScheme.onSurface),
                       code: TextStyle(
-                        backgroundColor: theme.colorScheme.surface,
-                        color: Colors.orangeAccent,
+                        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                        color: theme.colorScheme.primary,
                         fontFamily: 'monospace',
                       ),
                       codeblockDecoration: BoxDecoration(
-                        color: const Color(0xFF0D1117), // GitHub dark dim
+                        color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
