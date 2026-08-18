@@ -16,14 +16,23 @@ class ApiService {
 
   Future<String> get baseUrl async => await getBaseUrl();
 
-  Stream<String> streamMessage(String message, String persona, String language) async* {
+  Stream<String> streamMessage(String message, String persona, String language, {String? imageBase64}) async* {
     final client = http.Client();
     try {
       final url = await baseUrl;
       final model = await getAiModel();
       final request = http.Request('POST', Uri.parse('$url/chat'));
       request.headers['Content-Type'] = 'application/json';
-      request.body = jsonEncode({"message": message, "persona": persona, "language": language, "model": model});
+      final bodyMap = {
+        "message": message, 
+        "persona": persona, 
+        "language": language, 
+        "model": model
+      };
+      if (imageBase64 != null) {
+        bodyMap["image_base64"] = imageBase64;
+      }
+      request.body = jsonEncode(bodyMap);
 
       final response = await client.send(request);
       
@@ -48,6 +57,24 @@ class ApiService {
 
   Future<String> generateCodePatch(String alertDetails) async {
     return _postRequest('/generate-patch', alertDetails, 'patch');
+  }
+
+  static Future<Map<String, dynamic>?> githubAutoFix(String repo, int prNumber, String pat, String fixCode) async {
+    try {
+      final url = await getBaseUrl();
+      final response = await http.post(
+        Uri.parse('$url/github-auto-fix'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'repo': repo, 'pr_number': prNumber, 'pat': pat, 'fix_code': fixCode}),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      print('Error running github auto fix: $e');
+      return null;
+    }
   }
 
   Future<String> _postRequest(String endpoint, String alertDetails, String key) async {

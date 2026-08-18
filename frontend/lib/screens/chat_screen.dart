@@ -9,6 +9,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../services/api_service.dart';
 import '../main.dart';
 
+import 'package:image_picker/image_picker.dart';
+
 class ChatScreen extends StatefulWidget {
   final SharedPreferences prefs;
   final String threadId;
@@ -26,6 +28,7 @@ class _ChatScreenState extends State<ChatScreen> {
   
   List<Map<String, String>> _messages = [];
   bool _isLoading = false;
+  String? _imageBase64;
   
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isSpeechInitialized = false;
@@ -93,6 +96,18 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _handsFreeTimer?.cancel();
     super.dispose();
+  }
+
+  void _pickImage() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      setState(() {
+        _imageBase64 = base64Encode(bytes);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Image Attached for Vision AI!')));
+      });
+    }
   }
 
   void _pickFile() async {
@@ -165,26 +180,30 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendMessage([String? text]) async {
     final userMsg = text ?? _controller.text.trim();
-    if (userMsg.isEmpty) return;
+    if (userMsg.isEmpty && _imageBase64 == null) return;
     
     if (widget.threadId == "default") {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please start a New Chat from the menu first!")));
       return;
     }
     
+    final b64 = _imageBase64;
+    final displayMsg = userMsg.isEmpty ? "[Image Attached]" : userMsg;
+
     setState(() {
-      _messages.add({"sender": "user", "text": userMsg});
+      _messages.add({"sender": "user", "text": displayMsg});
       _messages.add({"sender": "ai", "text": ""});
       _controller.clear();
+      _imageBase64 = null;
       _isLoading = true;
     });
     
-    await _saveMessageToCloud("user", userMsg);
+    await _saveMessageToCloud("user", displayMsg);
     _scrollToBottom();
 
     final persona = widget.prefs.getString('persona') ?? "auditor";
     final language = widget.prefs.getString('language') ?? "English";
-    final stream = _apiService.streamMessage(userMsg, persona, language);
+    final stream = _apiService.streamMessage(userMsg, persona, language, imageBase64: b64);
     
     String fullAiResponse = "";
     
@@ -519,6 +538,11 @@ class _ChatScreenState extends State<ChatScreen> {
                             icon: const Icon(Icons.attach_file, color: Colors.grey),
                             onPressed: _pickFile,
                             tooltip: "Upload File",
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.camera_alt, color: _imageBase64 != null ? Colors.cyanAccent : Colors.grey),
+                            onPressed: _pickImage,
+                            tooltip: "Upload Image for Vision AI",
                           ),
                           Expanded(
                             child: TextField(

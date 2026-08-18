@@ -25,6 +25,7 @@ class ChatRequest(BaseModel):
     persona: str = "auditor"
     language: str = "English"
     model: str = "openai/gpt-oss-20b"
+    image_base64: str = None
 
 class CodeRequest(BaseModel):
     code: str
@@ -42,6 +43,12 @@ class GithubPrRequest(BaseModel):
     pr_number: int
     pat: str
 
+class GithubFixRequest(BaseModel):
+    repo: str
+    pr_number: int
+    pat: str
+    fix_code: str
+
 @app.get("/")
 def read_root():
     return {"status": "Backend is running!"}
@@ -49,7 +56,7 @@ def read_root():
 @app.post("/chat")
 def chat(request: ChatRequest):
     return StreamingResponse(
-        stream_security_copilot(request.message, request.persona, request.language, request.model), 
+        stream_security_copilot(request.message, request.persona, request.language, request.model, request.image_base64), 
         media_type="text/event-stream"
     )
 
@@ -216,6 +223,25 @@ def github_pr(request: GithubPrRequest):
             return {"review": review}
         else:
             return {"error": f"GitHub API error: {resp.status_code} - {resp.text}"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/github-auto-fix")
+def github_auto_fix(request: GithubFixRequest):
+    try:
+        headers = {
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": f"token {request.pat}"
+        }
+        url = f"https://api.github.com/repos/{request.repo}/issues/{request.pr_number}/comments"
+        payload = {
+            "body": f"### SecurAI Auto-Fix Deployment 🚀\nThe AI has detected vulnerabilities and generated a secure patch for this Pull Request. Please apply the following changes:\n\n```python\n{request.fix_code}\n```"
+        }
+        resp = requests.post(url, headers=headers, json=payload)
+        if resp.status_code == 201:
+            return {"status": "Success! The secure patch was successfully deployed as an official review on the PR!"}
+        else:
+            return {"error": f"Failed to push fix: {resp.status_code} - {resp.text}"}
     except Exception as e:
         return {"error": str(e)}
 

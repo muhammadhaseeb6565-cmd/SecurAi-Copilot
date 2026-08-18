@@ -44,7 +44,7 @@ If the user asks how to do something related to these, guide them to use the too
 Act as a true Agentic AI: analyze the user's intent, refer to the app's capabilities, and provide comprehensive, context-aware cybersecurity guidance.
 """
 
-async def stream_security_copilot(message: str, persona: str = "auditor", language: str = "English", model_name: str = "openai/gpt-oss-20b"):
+async def stream_security_copilot(message: str, persona: str = "auditor", language: str = "English", model_name: str = "openai/gpt-oss-20b", image_base64: str = None):
     api_key = os.getenv("GROQ_API_KEY", "mock_key_for_testing")
     
     if api_key == "mock_key_for_testing" or not api_key:
@@ -52,6 +52,10 @@ async def stream_security_copilot(message: str, persona: str = "auditor", langua
         return
 
     try:
+        # If user uploads an image, force a vision model to handle it.
+        if image_base64 and model_name != "llama-3.2-90b-vision-preview":
+            model_name = "llama-3.2-90b-vision-preview"
+
         llm = ChatGroq(groq_api_key=api_key, model_name=model_name, streaming=True)
         
         system_prompt = get_app_context() + "\n\n" + PERSONAS.get(persona, PERSONAS["auditor"])
@@ -66,16 +70,28 @@ async def stream_security_copilot(message: str, persona: str = "auditor", langua
         else:
             system_prompt += f"\nCRITICAL INSTRUCTION: You MUST translate and write your entire response exclusively in {language}."
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", "{input}"),
-        ])
-        
-        chain = prompt | llm
-        
-        async for chunk in chain.astream({"input": message}):
-            if chunk.content:
-                yield chunk.content
+        if image_base64:
+            human_content = [
+                {"type": "text", "text": message},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}},
+            ]
+            prompt = ChatPromptTemplate.from_messages([
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=human_content)
+            ])
+            chain = prompt | llm
+            async for chunk in chain.astream({}):
+                if chunk.content:
+                    yield chunk.content
+        else:
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", system_prompt),
+                ("human", "{input}"),
+            ])
+            chain = prompt | llm
+            async for chunk in chain.astream({"input": message}):
+                if chunk.content:
+                    yield chunk.content
     except Exception as e:
         yield f"Error connecting to Groq AI: {str(e)}"
 
