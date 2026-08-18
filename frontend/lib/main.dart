@@ -76,16 +76,56 @@ class SecurAIApp extends StatelessWidget {
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.cyanAccent,
-          brightness: Brightness.dark,
-          surface: const Color(0xFF141414),
-          primary: Colors.cyanAccent,
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF00FFFF), // Cyan Accent
+          secondary: Color(0xFFFF00FF), // Neon Magenta
+          surface: Color(0xFF0D0D12),
         ),
         scaffoldBackgroundColor: const Color(0xFF050505), // AMOLED Black
-        textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme).apply(
+        textTheme: GoogleFonts.shareTechMonoTextTheme(Theme.of(context).textTheme).apply(
           bodyColor: Colors.white,
-          displayColor: Colors.white,
+          displayColor: const Color(0xFF00FFFF),
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: GoogleFonts.orbitron(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF00FFFF)),
+        ),
+        cardTheme: CardTheme(
+          color: const Color(0xFF0D0D12),
+          elevation: 10,
+          shadowColor: const Color(0xFF00FFFF).withValues(alpha: 0.3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+            side: BorderSide(color: const Color(0xFF00FFFF).withValues(alpha: 0.5), width: 1),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00FFFF).withValues(alpha: 0.1),
+            foregroundColor: const Color(0xFF00FFFF),
+            side: const BorderSide(color: Color(0xFF00FFFF), width: 1.5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            elevation: 8,
+            shadowColor: const Color(0xFF00FFFF).withValues(alpha: 0.5),
+          )
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF0D0D12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: const BorderSide(color: Color(0xFF00FFFF), width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(color: const Color(0xFF00FFFF).withValues(alpha: 0.3), width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: const BorderSide(color: Color(0xFF00FFFF), width: 2),
+          ),
         ),
         useMaterial3: true,
       ),

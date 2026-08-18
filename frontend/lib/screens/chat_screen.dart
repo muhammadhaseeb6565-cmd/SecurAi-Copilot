@@ -318,20 +318,23 @@ class _ChatScreenState extends State<ChatScreen> {
         margin: const EdgeInsets.symmetric(vertical: 8),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
         decoration: BoxDecoration(
-          color: isUser ? theme.colorScheme.primary : theme.colorScheme.surface,
+          color: isUser ? theme.colorScheme.primary.withValues(alpha: 0.15) : const Color(0xFF0D0D12),
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
+            topLeft: const Radius.circular(2),
             topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isUser ? 16 : 0),
-            bottomRight: Radius.circular(isUser ? 0 : 16),
+            bottomLeft: Radius.circular(isUser ? 16 : 2),
+            bottomRight: Radius.circular(isUser ? 2 : 16),
+          ),
+          border: Border.all(
+            color: isUser ? theme.colorScheme.primary : theme.colorScheme.secondary,
+            width: 1.5,
           ),
           boxShadow: [
-            if (!isUser)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              )
+            BoxShadow(
+              color: (isUser ? theme.colorScheme.primary : theme.colorScheme.secondary).withValues(alpha: 0.3),
+              blurRadius: 10,
+              spreadRadius: 1,
+            )
           ],
         ),
         child: Column(
