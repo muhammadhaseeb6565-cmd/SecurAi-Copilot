@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
@@ -15,7 +13,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'dart:io';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 import 'screens/security_block_screen.dart';
@@ -328,7 +325,7 @@ class _SecurAIAppState extends State<SecurAIApp> with WidgetsBindingObserver {
         ),
         useMaterial3: true,
       ),
-      home: SplashScreen(prefs: prefs),
+      home: SplashScreen(prefs: widget.prefs),
     );
   }
 }
