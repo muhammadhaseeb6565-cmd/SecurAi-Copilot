@@ -4,6 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
+
+  // [SECURITY LAYER] HONEYPOT CANARY TOKEN
+  // This looks like a highly privileged API key to anyone reverse-engineering or decompiling the APK/IPA.
+  // In reality, it is radioactive. Any request received by the backend using this token results in an instant, permanent IP ban.
+  static const String _fallbackAdminToken = 'Bearer sk-live-7x9qM32PjL5vRk9bN2mZ1xQ4';
+
   static Future<String> getBaseUrl() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('api_base_url') ??

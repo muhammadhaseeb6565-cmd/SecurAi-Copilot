@@ -25,6 +25,26 @@ DANGEROUS_PATTERNS = ["<script>", "UNION SELECT", "DROP TABLE", "OR 1=1", "exec(
 @app.middleware("http")
 async def active_threat_defense(request: Request, call_next):
     client_ip = request.client.host if request.client else "unknown"
+
+    # LAYER 18: Strict Automated Scanner Fingerprinting
+    user_agent = request.headers.get("User-Agent", "").lower()
+    blocked_agents = ["curl", "postman", "python", "nmap", "sqlmap", "zgrab", "masscan", "nikto", "dirb", "wget", "insomnia", "httpie"]
+    if any(agent in user_agent for agent in blocked_agents):
+        BANNED_IPS.add(client_ip)
+        return JSONResponse(status_code=403, content={"detail": "Automated tool fingerprinted and blacklisted."})
+        
+    # LAYER 19: Canary Token Trap (Radioactive API Key)
+    auth_header = request.headers.get("Authorization", "")
+    if "sk-live-7x9qM32PjL5vRk9bN2mZ1xQ4" in auth_header or "sk-live-7x9qM32PjL5vRk9bN2mZ1xQ4" in request.url.path:
+        BANNED_IPS.add(client_ip)
+        return JSONResponse(status_code=403, content={"detail": "Canary token triggered. IP permanently blacklisted."})
+        
+    # LAYER 20: Micro Content-Length Hard Limit (Anti-Slowloris/Buffer Overflow)
+    content_length = request.headers.get("Content-Length")
+    if content_length and int(content_length) > 15360: # 15KB max payload
+        BANNED_IPS.add(client_ip)
+        return JSONResponse(status_code=413, content={"detail": "Payload exceeds strict micro-limit. Connection severed."})
+
     if client_ip in BANNED_IPS:
         return JSONResponse(status_code=403, content={"error": "FUCK OFF. YOUR IP IS PERMANENTLY BANNED FOR MALICIOUS ACTIVITY."})
     
