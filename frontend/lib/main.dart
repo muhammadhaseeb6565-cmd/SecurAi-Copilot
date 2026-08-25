@@ -122,7 +122,7 @@ void main() async {
 
     runApp(
       ChangeNotifierProvider(
-        create: (_) => ThemeProvider(widget.prefs),
+        create: (_) => ThemeProvider(prefs),
         child: SecurAIApp(prefs: prefs),
       ),
     );
