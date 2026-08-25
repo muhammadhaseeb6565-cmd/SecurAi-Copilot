@@ -163,13 +163,90 @@ class ThemeProvider extends ChangeNotifier {
   }
 }
 
-class SecurAIApp extends StatelessWidget {
-  final SharedPreferences prefs;
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
-  const SecurAIApp({super.key, required this.prefs});
+class SecurAIApp extends StatefulWidget {
+  const SecurAIApp({super.key});
+
+  @override
+  State<SecurAIApp> createState() => _SecurAIAppState();
+}
+
+class _SecurAIAppState extends State<SecurAIApp> with WidgetsBindingObserver {
+  bool _isSecureLocked = false;
+  final LocalAuthentication auth = LocalAuthentication();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      // Iron Vault: Lock the app instantly when it goes to the background
+      setState(() {
+        _isSecureLocked = true;
+      });
+    } else if (state == AppLifecycleState.resumed && _isSecureLocked) {
+      // Require biometrics to unlock
+      _requireBiometrics();
+    }
+  }
+
+  Future<void> _requireBiometrics() async {
+    try {
+      bool didAuth = await auth.authenticate(
+        localizedReason: 'IRON VAULT ACTIVE. Authenticate to resume session.',
+        options: const AuthenticationOptions(biometricOnly: false, stickyAuth: true),
+      );
+      if (didAuth) {
+        setState(() { _isSecureLocked = false; });
+      } else {
+        exit(0); // Kill the app if auth fails
+      }
+    } catch (e) {
+      exit(0);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isSecureLocked) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock, color: Colors.redAccent, size: 100),
+                const SizedBox(height: 20),
+                const Text('IRON VAULT LOCKED', style: TextStyle(color: Colors.redAccent, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2)),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _requireBiometrics,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+                  child: const Text('UNLOCK SESSION'),
+                )
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(

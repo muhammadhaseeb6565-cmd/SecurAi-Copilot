@@ -390,8 +390,16 @@ async def honeypot_trap(request: Request):
         content={'error': 'HONEYPOT TRIGGERED. YOU ARE PERMANENTLY BANNED.'}
     )
 
+from pydantic import Field
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., max_length=2000)
+    topic: str = Field(None, max_length=100)
+    image_base64: str = Field(None, max_length=5000000) # 5MB limit
+    
 class PhishingRequest(BaseModel):
-    content: str
+    content: str = Field(..., max_length=10000)
+
 
 @app.post('/api/analyze-phishing')
 @limiter.limit('10/minute')
