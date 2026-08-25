@@ -311,3 +311,27 @@ Provide a rewritten, highly secure version of the file in a markdown code block.
         return {"response": completion.choices[0].message.content, "model": "llama-3.3-70b-versatile"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+class QuizRequest(BaseModel):
+    topic: str
+
+@app.post("/generate-quiz")
+async def generate_quiz(request: QuizRequest):
+    system_prompt = """You are a DevSecOps training AI. Generate a 3-question multiple choice quiz about the provided topic. Respond ONLY with a valid JSON array of objects. Each object must have: 'question' (string), 'code_snippet' (string, optional), 'options' (array of exactly 4 strings), 'correct_index' (integer 0-3), and 'explanation' (string)."""
+    try:
+        completion = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": request.topic}
+            ],
+            temperature=0.3
+        )
+        response_content = completion.choices[0].message.content
+        start_idx = response_content.find('[')
+        end_idx = response_content.rfind(']') + 1
+        if start_idx != -1 and end_idx != 0:
+            response_content = response_content[start_idx:end_idx]
+        return json.loads(response_content)
+    except Exception as e:
+        return {"error": str(e)}

@@ -68,6 +68,24 @@ class ApiService {
       throw Exception("Failed to connect: $e");
     }
   }
+
+  Future<List<dynamic>> generateQuiz(String topic) async {
+    try {
+      final url = await baseUrl;
+      final response = await http.post(
+        Uri.parse("$url/generate-quiz"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"topic": topic}),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception("Failed to generate quiz");
+      }
+    } catch (e) {
+      throw Exception("Error: $e");
+    }
+  }
   Future<String> generateReport(String alertDetails) async {
     return _postRequest('/generate-report', alertDetails, 'report');
   }

@@ -23,6 +23,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _shodanResult;
   bool _isShodanLoading = false;
   bool _isDeepScanning = false;
+  bool _isLockedDown = false;
+
+  void _triggerLockdown() {
+    if (_isLockedDown) {
+      setState(() => _isLockedDown = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System Lockdown lifted.'), backgroundColor: Colors.green));
+      return;
+    }
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.red.shade900,
+          title: const Row(children: [Icon(Icons.warning, color: Colors.white), SizedBox(width: 8), Text("EMERGENCY LOCKDOWN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]),
+          content: const Text("Are you sure you want to trigger a system-wide lockdown?\n\nThis will block all incoming API traffic, isolate the environment, and revoke active sessions.", style: TextStyle(color: Colors.white)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("CANCEL", style: TextStyle(color: Colors.white70)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() => _isLockedDown = true);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System Lockdown INITIATED. Environment isolated.'), backgroundColor: Colors.red));
+              },
+              child: const Text("CONFIRM LOCKDOWN", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      }
+    );
+  }
 
   StreamSubscription? _metricsSub;
   Map<String, dynamic> _streamData = {
@@ -206,6 +241,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_isLockedDown)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade900,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.redAccent, width: 2),
+                  boxShadow: [BoxShadow(color: Colors.red.withValues(alpha: 0.5), blurRadius: 20, spreadRadius: 5)],
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.lock_person, size: 64, color: Colors.white),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "SYSTEM LOCKED DOWN",
+                      style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "All external traffic is currently blocked. Environment is isolated.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
             if (_streamData["anomaly_score"] > 8.0)
               Container(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -398,9 +461,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ? const SizedBox(width: 140, child: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)))
                 : _buildActionCard(Icons.analytics, 'Run Deep Scan', Colors.cyanAccent, _runDeepScan),
               _buildActionCard(Icons.travel_explore, 'Breach Scan', Colors.orangeAccent, _runBreachScan),
-              _buildActionCard(Icons.security, 'Lockdown System', Colors.redAccent, () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System Lockdown triggered.')));
-              }),
+              _buildActionCard(
+                _isLockedDown ? Icons.lock_open : Icons.security, 
+                _isLockedDown ? 'Lift Lockdown' : 'Lockdown System', 
+                _isLockedDown ? Colors.greenAccent : Colors.redAccent, 
+                _triggerLockdown
+              ),
             ],
           ),
         ),
