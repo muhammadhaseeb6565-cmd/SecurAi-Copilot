@@ -19,8 +19,22 @@ app = FastAPI(title="SecurAI Mobile Backend")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+BANNED_IPS = set()
+DANGEROUS_PATTERNS = ["<script>", "UNION SELECT", "DROP TABLE", "OR 1=1", "exec(", "system("]
+
 @app.middleware("http")
-async def add_security_headers(request: Request, call_next):
+async def active_threat_defense(request: Request, call_next):
+    client_ip = request.client.host if request.client else "unknown"
+    if client_ip in BANNED_IPS:
+        return JSONResponse(status_code=403, content={"error": "FUCK OFF. YOUR IP IS PERMANENTLY BANNED FOR MALICIOUS ACTIVITY."})
+    
+    # Check for simple malicious patterns in URL or Query
+    url_string = str(request.url).lower()
+    for pattern in DANGEROUS_PATTERNS:
+        if pattern.lower() in url_string:
+            BANNED_IPS.add(client_ip)
+            return JSONResponse(status_code=403, content={"error": "HACKING ATTEMPT DETECTED. IP BANNED."})
+
     response = await call_next(request)
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["X-Content-Type-Options"] = "nosniff"
