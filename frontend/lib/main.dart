@@ -13,6 +13,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:io';
+import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
+import 'screens/security_block_screen.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -92,6 +96,24 @@ void main() async {
 
     final prefs = await SharedPreferences.getInstance();
     
+    if (Platform.isAndroid) {
+      await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
+    }
+    
+    bool isCompromised = false;
+    try {
+      bool jailbroken = await FlutterJailbreakDetection.jailbroken;
+      bool developerMode = await FlutterJailbreakDetection.developerMode;
+      isCompromised = jailbroken || developerMode;
+    } catch (e) {
+      isCompromised = true;
+    }
+
+    if (isCompromised) {
+      runApp(const SecurityBlockApp());
+      return;
+    }
+
     runApp(
       ChangeNotifierProvider(
         create: (_) => ThemeProvider(prefs),
