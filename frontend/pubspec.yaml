@@ -29,7 +29,6 @@ dependencies:
   crypto: ^3.0.3
   workmanager: ^0.10.7
   flutter_local_notifications: ^17.2.1
-  flutter_windowmanager: ^0.2.0
   supabase: any
   encrypt: ^5.0.3
 dev_dependencies:

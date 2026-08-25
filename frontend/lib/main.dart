@@ -13,7 +13,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'screens/security_block_screen.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -97,10 +96,6 @@ void main() async {
     );
 
     final prefs = await SharedPreferences.getInstance();
-
-    if (Platform.isAndroid) {
-      await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
-    }
 
     // Pure-Dart root/jailbreak detection (replaces flutter_jailbreak_detection plugin)
     bool isCompromised = false;
