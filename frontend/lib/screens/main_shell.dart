@@ -48,10 +48,7 @@ class _MainShellState extends State<MainShell> {
 
   void _createNewChat() async {
     final title =
-        "Session " +
-        DateTime.now().hour.toString() +
-        ":" +
-        DateTime.now().minute.toString();
+        "Session ${DateTime.now().hour}:${DateTime.now().minute}";
     try {
       final response = await supabase
           .from('chat_sessions')
@@ -66,10 +63,11 @@ class _MainShellState extends State<MainShell> {
       });
       Navigator.pop(context);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Error creating chat: $e")));
+      }
     }
   }
 

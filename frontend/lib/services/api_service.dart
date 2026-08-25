@@ -80,7 +80,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception("Server returned " + response.statusCode.toString());
+        throw Exception("Server returned ${response.statusCode}");
       }
     } catch (e) {
       throw Exception("Failed to connect: $e");

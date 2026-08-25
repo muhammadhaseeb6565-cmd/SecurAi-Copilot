@@ -61,10 +61,11 @@ class _LoginScreenState extends State<LoginScreen>
     try {
       if (_isSignUp) {
         await supabase.auth.signUp(email: email, password: password);
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Sign up successful! Logging in...")),
           );
+        }
       }
 
       await supabase.auth.signInWithPassword(email: email, password: password);
@@ -82,15 +83,17 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       );
     } on AuthException catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message), backgroundColor: Colors.red),
         );
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
         );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -119,15 +122,17 @@ class _LoginScreenState extends State<LoginScreen>
         );
       }
     } on AuthException catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message), backgroundColor: Colors.red),
         );
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
         );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

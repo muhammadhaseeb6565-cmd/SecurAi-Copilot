@@ -163,10 +163,11 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       _scrollToBottom();
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Error loading messages: $e")));
+      }
     }
   }
 
@@ -558,7 +559,7 @@ class _ChatScreenState extends State<ChatScreen> {
               Switch(
                 value: _handsFreeMode,
                 onChanged: _toggleHandsFree,
-                activeColor: Colors.cyanAccent,
+                activeThumbColor: Colors.cyanAccent,
               ),
             ],
           ),

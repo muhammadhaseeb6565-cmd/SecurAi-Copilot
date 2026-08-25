@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -25,7 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _shodanController = TextEditingController();
   Map<String, dynamic>? _shodanResult;
   bool _isShodanLoading = false;
-  bool _isDeepScanning = false;
+  final bool _isDeepScanning = false;
   bool _isLockedDown = false;
 
   final LocalAuthentication auth = LocalAuthentication();
@@ -121,7 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     "threats": 0,
   };
   Timer? _healthTimer;
-  List<FlSpot> _trafficSpots = [const FlSpot(0, 0)];
+  final List<FlSpot> _trafficSpots = [const FlSpot(0, 0)];
   double _graphX = 0;
 
   final List<Map<String, dynamic>> _liveAlerts = [];

@@ -58,7 +58,7 @@ void callbackDispatcher() {
             await flutterLocalNotificationsPlugin.show(
               0,
               'CRITICAL THREAT: ',
-              'CVSS : '.substring(0, 100) + '...',
+              '${'CVSS : '.substring(0, 100)}...',
               platformChannelSpecifics,
             );
           }
@@ -388,11 +388,12 @@ class _BiometricGuardState extends State<BiometricGuard> {
     final requireBiometrics =
         widget.prefs.getBool('requireBiometrics') ?? false;
     if (!requireBiometrics) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isAuthenticated = true;
           _isChecking = false;
         });
+      }
       return;
     }
 
@@ -400,11 +401,12 @@ class _BiometricGuardState extends State<BiometricGuard> {
       final canCheck =
           await auth.canCheckBiometrics || await auth.isDeviceSupported();
       if (!canCheck) {
-        if (mounted)
+        if (mounted) {
           setState(() {
             _isAuthenticated = true;
             _isChecking = false;
           });
+        }
         return;
       }
 
@@ -423,11 +425,12 @@ class _BiometricGuardState extends State<BiometricGuard> {
         });
       }
     } on PlatformException catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isAuthenticated = false;
           _isChecking = false;
         });
+      }
     }
   }
 

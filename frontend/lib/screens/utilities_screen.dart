@@ -176,7 +176,7 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
                       ),
                       Container(
                         padding: const EdgeInsets.all(12),
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         child: Text(
                           const JsonEncoder.withIndent(
                             '  ',
@@ -197,7 +197,7 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
                       ),
                       Container(
                         padding: const EdgeInsets.all(12),
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         child: Text(
                           const JsonEncoder.withIndent(
                             '  ',
@@ -212,7 +212,7 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
                         Container(
                           margin: const EdgeInsets.only(top: 16),
                           padding: const EdgeInsets.all(12),
-                          color: Colors.red.withOpacity(0.2),
+                          color: Colors.red.withValues(alpha: 0.2),
                           child: const Row(
                             children: [
                               Icon(Icons.warning, color: Colors.redAccent),
@@ -252,8 +252,8 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.5),
-            border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
+            color: Colors.black.withValues(alpha: 0.5),
+            border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
