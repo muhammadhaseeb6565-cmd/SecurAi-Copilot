@@ -35,6 +35,12 @@ async def active_threat_defense(request: Request, call_next):
             BANNED_IPS.add(client_ip)
             return JSONResponse(status_code=403, content={"error": "HACKING ATTEMPT DETECTED. IP BANNED."})
 
+    # Validate Mobile App Signature (Defense against direct API hammering)
+    # The frontend app must supply this header to prove it is the legitimate client
+    client_header = request.headers.get("X-SecurAI-Client")
+    if client_header != "mobile-app-verified-v1" and request.url.path.startswith("/api/"):
+        return JSONResponse(status_code=403, content={"error": "Unauthorized API Access. Missing secure client signature."})
+
     response = await call_next(request)
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["X-Content-Type-Options"] = "nosniff"

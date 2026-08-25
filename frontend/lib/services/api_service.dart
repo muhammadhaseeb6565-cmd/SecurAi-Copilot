@@ -29,6 +29,7 @@ class ApiService {
       final model = await getAiModel();
       final request = http.Request('POST', Uri.parse('$url/chat'));
       request.headers['Content-Type'] = 'application/json';
+      request.headers['X-SecurAI-Client'] = 'mobile-app-verified-v1';
       final bodyMap = {
         "message": message,
         "persona": persona,
@@ -66,7 +67,10 @@ class ApiService {
       final url = await baseUrl;
       final response = await http.post(
         Uri.parse("$url/$endpoint"),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-SecurAI-Client': 'mobile-app-verified-v1',
+        },
         body: jsonEncode({
           "message": message,
           "persona": persona,
@@ -88,7 +92,10 @@ class ApiService {
       final url = await baseUrl;
       final response = await http.post(
         Uri.parse("$url/generate-quiz"),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-SecurAI-Client': 'mobile-app-verified-v1',
+        },
         body: jsonEncode({"topic": topic}),
       );
       if (response.statusCode == 200) {
@@ -119,7 +126,10 @@ class ApiService {
       final url = await getBaseUrl();
       final response = await http.post(
         Uri.parse('$url/github-auto-fix'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-SecurAI-Client': 'mobile-app-verified-v1',
+        },
         body: jsonEncode({
           'repo': repo,
           'pr_number': prNumber,
@@ -147,7 +157,10 @@ class ApiService {
       final model = await getAiModel();
       final response = await http.post(
         Uri.parse('$url$endpoint'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-SecurAI-Client': 'mobile-app-verified-v1',
+        },
         body: jsonEncode({"alert_details": alertDetails, "model": model}),
       );
 
@@ -168,7 +181,10 @@ class ApiService {
       final response = await http
           .post(
             Uri.parse('$url/url-scan'),
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'X-SecurAI-Client': 'mobile-app-verified-v1',
+            },
             body: jsonEncode({"url": targetUrl}),
           )
           .timeout(const Duration(seconds: 10));
@@ -198,7 +214,10 @@ class ApiService {
       final response = await http
           .post(
             Uri.parse('$url/breach-scan'),
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'X-SecurAI-Client': 'mobile-app-verified-v1',
+            },
             body: jsonEncode({"email": email}),
           )
           .timeout(const Duration(seconds: 10));
@@ -215,7 +234,10 @@ class ApiService {
   static Future<Map<String, dynamic>?> fetchSystemMetrics() async {
     try {
       final url = await getBaseUrl();
-      final response = await http.get(Uri.parse('$url/system-metrics'));
+      final response = await http.get(
+        Uri.parse('$url/system-metrics'),
+        headers: {'X-SecurAI-Client': 'mobile-app-verified-v1'},
+      );
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       }
@@ -234,7 +256,10 @@ class ApiService {
       final url = await getBaseUrl();
       final response = await http.post(
         Uri.parse('$url/shodan-scan'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-SecurAI-Client': 'mobile-app-verified-v1',
+        },
         body: jsonEncode({'ip': ip, 'api_key': apiKey}),
       );
       if (response.statusCode == 200) {
@@ -256,7 +281,10 @@ class ApiService {
       final url = await getBaseUrl();
       final response = await http.post(
         Uri.parse('$url/github-pr'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-SecurAI-Client': 'mobile-app-verified-v1',
+        },
         body: jsonEncode({'repo': repo, 'pr_number': prNumber, 'pat': pat}),
       );
       if (response.statusCode == 200) {
