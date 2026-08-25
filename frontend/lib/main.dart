@@ -14,7 +14,6 @@ import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
-import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 import 'screens/security_block_screen.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -103,13 +102,30 @@ void main() async {
       await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
     }
 
+    // Pure-Dart root/jailbreak detection (replaces flutter_jailbreak_detection plugin)
     bool isCompromised = false;
-    try {
-      bool jailbroken = await FlutterJailbreakDetection.jailbroken;
-      bool developerMode = await FlutterJailbreakDetection.developerMode;
-      isCompromised = jailbroken || developerMode;
-    } catch (e) {
-      isCompromised = true;
+    if (Platform.isAndroid || Platform.isIOS) {
+      try {
+        // Check for common root/jailbreak indicators without a native plugin
+        final List<String> suspiciousPaths = [
+          '/system/app/Superuser.apk', '/sbin/su', '/system/bin/su',
+          '/system/xbin/su', '/data/local/xbin/su', '/data/local/bin/su',
+          '/system/sd/xbin/su', '/system/bin/failsafe/su',
+          '/data/local/su', '/su/bin/su',
+          '/Applications/Cydia.app', '/private/var/lib/apt',
+          '/private/var/mobile/Library/SBSettings',
+          '/Library/MobileSubstrate/MobileSubstrate.dylib',
+        ];
+        for (final p in suspiciousPaths) {
+          if (await File(p).exists()) {
+            isCompromised = true;
+            break;
+          }
+        }
+      } catch (e) {
+        // Cannot determine — assume safe
+        isCompromised = false;
+      }
     }
 
     if (isCompromised) {
