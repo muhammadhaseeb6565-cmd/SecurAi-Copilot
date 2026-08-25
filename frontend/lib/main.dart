@@ -1,3 +1,5 @@
+import 'package:local_auth/local_auth.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -120,7 +122,7 @@ void main() async {
 
     runApp(
       ChangeNotifierProvider(
-        create: (_) => ThemeProvider(prefs),
+        create: (_) => ThemeProvider(widget.prefs),
         child: SecurAIApp(prefs: prefs),
       ),
     );
@@ -163,12 +165,9 @@ class ThemeProvider extends ChangeNotifier {
   }
 }
 
-import 'package:local_auth/local_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
-
 class SecurAIApp extends StatefulWidget {
-  const SecurAIApp({super.key});
+  final SharedPreferences prefs;
+  const SecurAIApp({super.key, required this.prefs});
 
   @override
   State<SecurAIApp> createState() => _SecurAIAppState();
