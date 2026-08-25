@@ -30,6 +30,7 @@ class ApiService {
       final request = http.Request('POST', Uri.parse('$url/chat'));
       request.headers['Content-Type'] = 'application/json';
       request.headers['X-SecurAI-Client'] = 'mobile-app-verified-v1';
+    request.headers['X-Request-Time'] = DateTime.now().millisecondsSinceEpoch.toString();
       final bodyMap = {
         "message": message,
         "persona": persona,
@@ -70,6 +71,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'X-SecurAI-Client': 'mobile-app-verified-v1',
+      'X-Request-Time': DateTime.now().millisecondsSinceEpoch.toString(),
         },
         body: jsonEncode({
           "message": message,
@@ -95,6 +97,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'X-SecurAI-Client': 'mobile-app-verified-v1',
+      'X-Request-Time': DateTime.now().millisecondsSinceEpoch.toString(),
         },
         body: jsonEncode({"topic": topic}),
       );
@@ -129,6 +132,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'X-SecurAI-Client': 'mobile-app-verified-v1',
+      'X-Request-Time': DateTime.now().millisecondsSinceEpoch.toString(),
         },
         body: jsonEncode({
           'repo': repo,
@@ -160,6 +164,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'X-SecurAI-Client': 'mobile-app-verified-v1',
+      'X-Request-Time': DateTime.now().millisecondsSinceEpoch.toString(),
         },
         body: jsonEncode({"alert_details": alertDetails, "model": model}),
       );
@@ -184,6 +189,7 @@ class ApiService {
             headers: {
               'Content-Type': 'application/json',
               'X-SecurAI-Client': 'mobile-app-verified-v1',
+      'X-Request-Time': DateTime.now().millisecondsSinceEpoch.toString(),
             },
             body: jsonEncode({"url": targetUrl}),
           )
@@ -217,6 +223,7 @@ class ApiService {
             headers: {
               'Content-Type': 'application/json',
               'X-SecurAI-Client': 'mobile-app-verified-v1',
+      'X-Request-Time': DateTime.now().millisecondsSinceEpoch.toString(),
             },
             body: jsonEncode({"email": email}),
           )
@@ -236,7 +243,8 @@ class ApiService {
       final url = await getBaseUrl();
       final response = await http.get(
         Uri.parse('$url/system-metrics'),
-        headers: {'X-SecurAI-Client': 'mobile-app-verified-v1'},
+        headers: {'X-SecurAI-Client': 'mobile-app-verified-v1',
+      'X-Request-Time': DateTime.now().millisecondsSinceEpoch.toString()},
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -259,6 +267,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'X-SecurAI-Client': 'mobile-app-verified-v1',
+      'X-Request-Time': DateTime.now().millisecondsSinceEpoch.toString(),
         },
         body: jsonEncode({'ip': ip, 'api_key': apiKey}),
       );
@@ -284,6 +293,7 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'X-SecurAI-Client': 'mobile-app-verified-v1',
+      'X-Request-Time': DateTime.now().millisecondsSinceEpoch.toString(),
         },
         body: jsonEncode({'repo': repo, 'pr_number': prNumber, 'pat': pat}),
       );

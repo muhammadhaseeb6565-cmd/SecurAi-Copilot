@@ -190,6 +190,7 @@ class _SecurAIAppState extends State<SecurAIApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      Clipboard.setData(const ClipboardData(text: ""));
       // Iron Vault: Lock the app instantly when it goes to the background
       setState(() {
         _isSecureLocked = true;
