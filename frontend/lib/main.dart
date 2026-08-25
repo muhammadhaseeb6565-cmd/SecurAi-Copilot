@@ -18,36 +18,43 @@ import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 import 'screens/security_block_screen.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
       // Background isolates must initialize their own plugins
-      const AndroidInitializationSettings initSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
-      const InitializationSettings initSettings = InitializationSettings(android: initSettingsAndroid);
+      const AndroidInitializationSettings initSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/launcher_icon');
+      const InitializationSettings initSettings = InitializationSettings(
+        android: initSettingsAndroid,
+      );
       await flutterLocalNotificationsPlugin.initialize(initSettings);
 
-      final response = await http.get(Uri.parse('https://cve.circl.lu/api/last')).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(Uri.parse('https://cve.circl.lu/api/last'))
+          .timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final cves = jsonDecode(response.body) as List<dynamic>;
         if (cves.isNotEmpty) {
           final topCve = cves.first;
           final cvss = (topCve['cvss'] ?? 0.0).toDouble();
-          
+
           if (cvss >= 7.0) {
             const AndroidNotificationDetails androidPlatformChannelSpecifics =
                 AndroidNotificationDetails(
-              'securai_cve_channel',
-              'Critical CVE Alerts',
-              channelDescription: 'Alerts for high severity vulnerabilities',
-              importance: Importance.max,
-              priority: Priority.high,
-            );
+                  'securai_cve_channel',
+                  'Critical CVE Alerts',
+                  channelDescription:
+                      'Alerts for high severity vulnerabilities',
+                  importance: Importance.max,
+                  priority: Priority.high,
+                );
             const NotificationDetails platformChannelSpecifics =
                 NotificationDetails(android: androidPlatformChannelSpecifics);
-            
+
             await flutterLocalNotificationsPlugin.show(
               0,
               'CRITICAL THREAT: ',
@@ -69,37 +76,34 @@ final supabase = Supabase.instance.client;
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    
+
     // Initialize Local Notifications
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
-    const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/launcher_icon');
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: false,
-    );
-    
+    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+
     Workmanager().registerPeriodicTask(
       "1",
       "cveCheckTask",
       frequency: const Duration(minutes: 15),
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-      ),
+      constraints: Constraints(networkType: NetworkType.connected),
     );
-    
+
     await Supabase.initialize(
       url: 'https://rnjffzwflbbyznzhcqpg.supabase.co',
       anonKey: 'sb_publishable_AGB2Fv2K6FXtyVeVLa_tWA_LE4foSrP',
     );
 
     final prefs = await SharedPreferences.getInstance();
-    
+
     if (Platform.isAndroid) {
       await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
     }
-    
+
     bool isCompromised = false;
     try {
       bool jailbroken = await FlutterJailbreakDetection.jailbroken;
@@ -145,7 +149,9 @@ class ThemeProvider extends ChangeNotifier {
   late ThemeMode _themeMode;
 
   ThemeProvider(this._prefs) {
-    _themeMode = (_prefs.getBool('isDarkMode') ?? true) ? ThemeMode.dark : ThemeMode.light;
+    _themeMode = (_prefs.getBool('isDarkMode') ?? true)
+        ? ThemeMode.dark
+        : ThemeMode.light;
   }
 
   ThemeMode get themeMode => _themeMode;
@@ -188,15 +194,18 @@ class SecurAIApp extends StatelessWidget {
           surface: Color(0xFF0D0D12),
         ),
         scaffoldBackgroundColor: const Color(0xFF050505), // AMOLED Black
-        textTheme: GoogleFonts.shareTechMonoTextTheme(Theme.of(context).textTheme).apply(
-          bodyColor: Colors.white,
-          displayColor: const Color(0xFF00FFFF),
-        ),
+        textTheme: GoogleFonts.shareTechMonoTextTheme(
+          Theme.of(context).textTheme,
+        ).apply(bodyColor: Colors.white, displayColor: const Color(0xFF00FFFF)),
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          titleTextStyle: GoogleFonts.orbitron(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF00FFFF)),
+          titleTextStyle: GoogleFonts.orbitron(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF00FFFF),
+          ),
         ),
         cardTheme: CardThemeData(
           color: const Color(0xFF0D0D12),
@@ -204,7 +213,10 @@ class SecurAIApp extends StatelessWidget {
           shadowColor: const Color(0xFF00FFFF).withValues(alpha: 0.3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(4),
-            side: BorderSide(color: const Color(0xFF00FFFF).withValues(alpha: 0.5), width: 1),
+            side: BorderSide(
+              color: const Color(0xFF00FFFF).withValues(alpha: 0.5),
+              width: 1,
+            ),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
@@ -212,10 +224,12 @@ class SecurAIApp extends StatelessWidget {
             backgroundColor: const Color(0xFF00FFFF).withValues(alpha: 0.1),
             foregroundColor: const Color(0xFF00FFFF),
             side: const BorderSide(color: Color(0xFF00FFFF), width: 1.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
             elevation: 8,
             shadowColor: const Color(0xFF00FFFF).withValues(alpha: 0.5),
-          )
+          ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
@@ -226,7 +240,10 @@ class SecurAIApp extends StatelessWidget {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: const Color(0xFF00FFFF).withValues(alpha: 0.3), width: 1),
+            borderSide: BorderSide(
+              color: const Color(0xFF00FFFF).withValues(alpha: 0.3),
+              width: 1,
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
@@ -242,7 +259,7 @@ class SecurAIApp extends StatelessWidget {
 
 class AuthGuard extends StatelessWidget {
   final SharedPreferences prefs;
-  
+
   const AuthGuard({super.key, required this.prefs});
 
   @override
@@ -251,11 +268,16 @@ class AuthGuard extends StatelessWidget {
       stream: supabase.auth.onAuthStateChange,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         final session = snapshot.data?.session ?? supabase.auth.currentSession;
         if (session != null) {
-          return BiometricGuard(prefs: prefs, child: MainShell(prefs: prefs));
+          return BiometricGuard(
+            prefs: prefs,
+            child: MainShell(prefs: prefs),
+          );
         }
         // If not logged in, go to LoginScreen
         return LoginScreen(prefs: prefs);
@@ -286,16 +308,26 @@ class _BiometricGuardState extends State<BiometricGuard> {
   }
 
   Future<void> _checkBiometrics() async {
-    final requireBiometrics = widget.prefs.getBool('requireBiometrics') ?? false;
+    final requireBiometrics =
+        widget.prefs.getBool('requireBiometrics') ?? false;
     if (!requireBiometrics) {
-      if (mounted) setState(() { _isAuthenticated = true; _isChecking = false; });
+      if (mounted)
+        setState(() {
+          _isAuthenticated = true;
+          _isChecking = false;
+        });
       return;
     }
 
     try {
-      final canCheck = await auth.canCheckBiometrics || await auth.isDeviceSupported();
+      final canCheck =
+          await auth.canCheckBiometrics || await auth.isDeviceSupported();
       if (!canCheck) {
-        if (mounted) setState(() { _isAuthenticated = true; _isChecking = false; });
+        if (mounted)
+          setState(() {
+            _isAuthenticated = true;
+            _isChecking = false;
+          });
         return;
       }
 
@@ -314,14 +346,22 @@ class _BiometricGuardState extends State<BiometricGuard> {
         });
       }
     } on PlatformException catch (_) {
-      if (mounted) setState(() { _isAuthenticated = false; _isChecking = false; });
+      if (mounted)
+        setState(() {
+          _isAuthenticated = false;
+          _isChecking = false;
+        });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isChecking) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)));
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.cyanAccent),
+        ),
+      );
     }
 
     if (!_isAuthenticated) {
@@ -332,9 +372,15 @@ class _BiometricGuardState extends State<BiometricGuard> {
             children: [
               const Icon(Icons.lock, size: 80, color: Colors.redAccent),
               const SizedBox(height: 24),
-              const Text("App Locked", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text(
+                "App Locked",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
-              const Text("Biometric authentication required.", style: TextStyle(color: Colors.grey)),
+              const Text(
+                "Biometric authentication required.",
+                style: TextStyle(color: Colors.grey),
+              ),
               const SizedBox(height: 32),
               ElevatedButton.icon(
                 onPressed: _checkBiometrics,
@@ -344,7 +390,7 @@ class _BiometricGuardState extends State<BiometricGuard> {
                   backgroundColor: Colors.cyanAccent.withValues(alpha: 0.2),
                   foregroundColor: Colors.cyanAccent,
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -354,4 +400,3 @@ class _BiometricGuardState extends State<BiometricGuard> {
     return widget.child;
   }
 }
-

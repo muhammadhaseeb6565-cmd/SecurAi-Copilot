@@ -13,12 +13,13 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   bool _isLoading = false;
   bool _isSignUp = false;
-  
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -47,9 +48,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   void _authenticate() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    
+
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter email and password")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter email and password")),
+      );
       return;
     }
 
@@ -58,9 +61,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     try {
       if (_isSignUp) {
         await supabase.auth.signUp(email: email, password: password);
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Sign up successful! Logging in...")));
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Sign up successful! Logging in...")),
+          );
       }
-      
+
       await supabase.auth.signInWithPassword(email: email, password: password);
 
       if (!mounted) return;
@@ -68,16 +74,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => MainShell(prefs: widget.prefs),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              MainShell(prefs: widget.prefs),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
         ),
       );
     } on AuthException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: Colors.red));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -86,7 +99,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   void _forgotPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter your email address in the field above")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter your email address in the field above"),
+        ),
+      );
       return;
     }
 
@@ -94,12 +111,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     try {
       await supabase.auth.resetPasswordForEmail(email);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Password reset email sent to $email"), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Password reset email sent to $email"),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } on AuthException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: Colors.red));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -118,7 +146,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.security, size: 100, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.security,
+                  size: 100,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(height: 24),
                 Text(
                   'SecurAI Copilot',
@@ -140,7 +172,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.email_outlined),
                     labelText: 'Corporate Email',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -150,9 +184,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.lock_outline),
                     labelText: 'Password',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
                       onPressed: () {
                         setState(() {
                           _obscurePassword = !_obscurePassword;
@@ -168,21 +208,36 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _authenticate,
                     style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator()
-                        : Text(_isSignUp ? 'Create Account' : 'Authenticate', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        : Text(
+                            _isSignUp ? 'Create Account' : 'Authenticate',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => setState(() => _isSignUp = !_isSignUp),
-                  child: Text(_isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"),
+                  child: Text(
+                    _isSignUp
+                        ? "Already have an account? Sign In"
+                        : "Need an account? Sign Up",
+                  ),
                 ),
                 TextButton(
                   onPressed: _isLoading ? null : _forgotPassword,
-                  child: const Text("Forgot Password?", style: TextStyle(color: Colors.cyanAccent)),
+                  child: const Text(
+                    "Forgot Password?",
+                    style: TextStyle(color: Colors.cyanAccent),
+                  ),
                 ),
               ],
             ),

@@ -37,7 +37,7 @@ class _MainShellState extends State<MainShell> {
     _screens = [
       const DashboardScreen(),
       ChatScreen(
-        prefs: widget.prefs, 
+        prefs: widget.prefs,
         threadId: _activeChatThreadId,
         key: ValueKey(_activeChatThreadId), // Force rebuild on thread change
       ),
@@ -47,13 +47,18 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _createNewChat() async {
-    final title = "Session " + DateTime.now().hour.toString() + ":" + DateTime.now().minute.toString();
+    final title =
+        "Session " +
+        DateTime.now().hour.toString() +
+        ":" +
+        DateTime.now().minute.toString();
     try {
-      final response = await supabase.from('chat_sessions').insert({
-        'title': title,
-        'user_id': supabase.auth.currentUser!.id,
-      }).select().single();
-      
+      final response = await supabase
+          .from('chat_sessions')
+          .insert({'title': title, 'user_id': supabase.auth.currentUser!.id})
+          .select()
+          .single();
+
       setState(() {
         _activeChatThreadId = response['id'];
         _currentIndex = 1;
@@ -61,7 +66,10 @@ class _MainShellState extends State<MainShell> {
       });
       Navigator.pop(context);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error creating chat: $e")));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error creating chat: $e")));
     }
   }
 
@@ -90,17 +98,25 @@ class _MainShellState extends State<MainShell> {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(Icons.security, size: 48, color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  Icons.security,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'SecurAI Copilot',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -115,7 +131,10 @@ class _MainShellState extends State<MainShell> {
             title: const Text('AI Phishing Sandbox'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const SandboxScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SandboxScreen()),
+              );
             },
           ),
           ListTile(
@@ -123,7 +142,12 @@ class _MainShellState extends State<MainShell> {
             title: const Text('DevSecOps Cloud Auditor'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const IacAuditorScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const IacAuditorScreen(),
+                ),
+              );
             },
           ),
           ListTile(
@@ -131,7 +155,10 @@ class _MainShellState extends State<MainShell> {
             title: const Text('Live Zero-Day Feed'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const CveFeedScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CveFeedScreen()),
+              );
             },
           ),
           ListTile(
@@ -139,7 +166,12 @@ class _MainShellState extends State<MainShell> {
             title: const Text('Crypto Utilities'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const UtilitiesScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const UtilitiesScreen(),
+                ),
+              );
             },
           ),
           ListTile(
@@ -147,7 +179,12 @@ class _MainShellState extends State<MainShell> {
             title: const Text('Network Architecture'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const NetworkMapScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NetworkMapScreen(),
+                ),
+              );
             },
           ),
           ListTile(
@@ -155,7 +192,10 @@ class _MainShellState extends State<MainShell> {
             title: const Text('DevSecOps Training'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const TrainingScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TrainingScreen()),
+              );
             },
           ),
           const Divider(),
@@ -163,23 +203,41 @@ class _MainShellState extends State<MainShell> {
             future: _fetchSessions(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()));
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
               }
               if (snapshot.hasError) {
-                return const Padding(padding: EdgeInsets.all(16.0), child: Text("Error loading chats", style: TextStyle(color: Colors.red)));
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    "Error loading chats",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                );
               }
               final threads = snapshot.data ?? [];
               if (threads.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: Text("No previous chats", style: TextStyle(color: Colors.grey)),
+                  child: Text(
+                    "No previous chats",
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 );
               }
               return Column(
                 children: threads.map((session) {
                   return ListTile(
                     leading: const Icon(Icons.chat_bubble_outline),
-                    title: Text(session['title'], maxLines: 1, overflow: TextOverflow.ellipsis),
+                    title: Text(
+                      session['title'],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     onTap: () => _loadChat(session['id']),
                     selected: _activeChatThreadId == session['id'],
                   );
@@ -207,10 +265,7 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: _buildDrawer(),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {

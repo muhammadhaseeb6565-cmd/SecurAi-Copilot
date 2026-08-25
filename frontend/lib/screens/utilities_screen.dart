@@ -12,18 +12,22 @@ class UtilitiesScreen extends StatefulWidget {
 class _UtilitiesScreenState extends State<UtilitiesScreen> {
   final _inputController = TextEditingController();
   final _jwtController = TextEditingController();
-  
+
   String _md5 = "";
   String _sha256 = "";
   String _sha512 = "";
-  
+
   Map<String, dynamic>? _decodedJwtHeader;
   Map<String, dynamic>? _decodedJwtPayload;
   String _jwtError = "";
 
   void _generateHashes(String input) {
     if (input.isEmpty) {
-      setState(() { _md5 = ""; _sha256 = ""; _sha512 = ""; });
+      setState(() {
+        _md5 = "";
+        _sha256 = "";
+        _sha512 = "";
+      });
       return;
     }
     final bytes = utf8.encode(input);
@@ -36,7 +40,11 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
 
   void _decodeJwt(String token) {
     if (token.isEmpty) {
-      setState(() { _decodedJwtHeader = null; _decodedJwtPayload = null; _jwtError = ""; });
+      setState(() {
+        _decodedJwtHeader = null;
+        _decodedJwtPayload = null;
+        _jwtError = "";
+      });
       return;
     }
     try {
@@ -46,10 +54,16 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
       String decodeBase64Url(String input) {
         String output = input.replaceAll('-', '+').replaceAll('_', '/');
         switch (output.length % 4) {
-          case 0: break;
-          case 2: output += '=='; break;
-          case 3: output += '='; break;
-          default: throw Exception('Illegal base64url string!');
+          case 0:
+            break;
+          case 2:
+            output += '==';
+            break;
+          case 3:
+            output += '=';
+            break;
+          default:
+            throw Exception('Illegal base64url string!');
         }
         return utf8.decode(base64Url.decode(output));
       }
@@ -75,7 +89,10 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          title: const Text('Crypto Utilities', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          title: const Text(
+            'Crypto Utilities',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: const IconThemeData(color: Colors.cyanAccent),
@@ -102,7 +119,10 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
                     onChanged: _generateHashes,
                     decoration: const InputDecoration(
                       labelText: 'Text to Hash',
-                      prefixIcon: Icon(Icons.text_fields, color: Colors.cyanAccent),
+                      prefixIcon: Icon(
+                        Icons.text_fields,
+                        color: Colors.cyanAccent,
+                      ),
                       border: OutlineInputBorder(),
                     ),
                     style: const TextStyle(color: Colors.white),
@@ -132,27 +152,61 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
                         alignLabelWithHint: true,
                         border: OutlineInputBorder(),
                       ),
-                      style: const TextStyle(color: Colors.white, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                     if (_jwtError.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 16),
-                        child: Text(_jwtError, style: const TextStyle(color: Colors.redAccent)),
+                        child: Text(
+                          _jwtError,
+                          style: const TextStyle(color: Colors.redAccent),
+                        ),
                       ),
                     if (_decodedJwtHeader != null) ...[
                       const SizedBox(height: 24),
-                      const Text('Header', style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Header',
+                        style: TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Container(
                         padding: const EdgeInsets.all(12),
                         color: Colors.black.withOpacity(0.5),
-                        child: Text(const JsonEncoder.withIndent('  ').convert(_decodedJwtHeader), style: const TextStyle(color: Colors.white70, fontFamily: 'monospace')),
+                        child: Text(
+                          const JsonEncoder.withIndent(
+                            '  ',
+                          ).convert(_decodedJwtHeader),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
-                      const Text('Payload', style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Payload',
+                        style: TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Container(
                         padding: const EdgeInsets.all(12),
                         color: Colors.black.withOpacity(0.5),
-                        child: Text(const JsonEncoder.withIndent('  ').convert(_decodedJwtPayload), style: const TextStyle(color: Colors.white70, fontFamily: 'monospace')),
+                        child: Text(
+                          const JsonEncoder.withIndent(
+                            '  ',
+                          ).convert(_decodedJwtPayload),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
                       ),
                       if (_decodedJwtHeader!['alg'] == 'none')
                         Container(
@@ -163,11 +217,16 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
                             children: [
                               Icon(Icons.warning, color: Colors.redAccent),
                               SizedBox(width: 8),
-                              Expanded(child: Text("CRITICAL: JWT uses 'none' algorithm! This token is entirely insecure.", style: TextStyle(color: Colors.redAccent))),
+                              Expanded(
+                                child: Text(
+                                  "CRITICAL: JWT uses 'none' algorithm! This token is entirely insecure.",
+                                  style: TextStyle(color: Colors.redAccent),
+                                ),
+                              ),
                             ],
                           ),
-                        )
-                    ]
+                        ),
+                    ],
                   ],
                 ),
               ),
@@ -182,7 +241,13 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.cyanAccent,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.all(12),
@@ -191,8 +256,15 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
             border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(hash.isEmpty ? '...' : hash, style: const TextStyle(color: Colors.white70, fontFamily: 'monospace', fontSize: 12)),
-        )
+          child: Text(
+            hash.isEmpty ? '...' : hash,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontFamily: 'monospace',
+              fontSize: 12,
+            ),
+          ),
+        ),
       ],
     );
   }

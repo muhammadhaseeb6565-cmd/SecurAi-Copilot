@@ -14,7 +14,7 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
   final _prController = TextEditingController();
   final _patController = TextEditingController();
   final _storage = const FlutterSecureStorage();
-  
+
   bool _isLoading = false;
   String? _reviewResult;
   String? _error;
@@ -33,7 +33,10 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
   }
 
   Future<void> _saveCredentials() async {
-    await _storage.write(key: 'github_repo', value: _repoController.text.trim());
+    await _storage.write(
+      key: 'github_repo',
+      value: _repoController.text.trim(),
+    );
     await _storage.write(key: 'github_pat', value: _patController.text.trim());
   }
 
@@ -50,7 +53,7 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
     final pat = _patController.text.trim();
 
     final result = await ApiService.githubPrReview(repo, pr, pat);
-    
+
     setState(() {
       _isLoading = false;
       if (result != null) {
@@ -67,7 +70,7 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
 
   Future<void> _deployFix() async {
     if (_reviewResult == null) return;
-    
+
     await _saveCredentials();
     setState(() {
       _isLoading = true;
@@ -85,15 +88,22 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
       return;
     }
 
-    final result = await ApiService.githubAutoFix(repo, pr, pat, _reviewResult!);
-    
+    final result = await ApiService.githubAutoFix(
+      repo,
+      pr,
+      pat,
+      _reviewResult!,
+    );
+
     setState(() {
       _isLoading = false;
       if (result != null) {
         if (result.containsKey('error')) {
           _error = result['error'];
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['status'] ?? 'Fix deployed!')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['status'] ?? 'Fix deployed!')),
+          );
         }
       } else {
         _error = "Failed to connect to backend.";
@@ -106,7 +116,10 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text('GitHub PR Auditor', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text(
+          'GitHub PR Auditor',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.cyanAccent),
@@ -121,7 +134,9 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: Colors.cyanAccent.withValues(alpha: 0.3),
+                ),
               ),
               child: Column(
                 children: [
@@ -139,7 +154,10 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
                     controller: _prController,
                     decoration: const InputDecoration(
                       labelText: 'Pull Request Number',
-                      prefixIcon: Icon(Icons.merge_type, color: Colors.cyanAccent),
+                      prefixIcon: Icon(
+                        Icons.merge_type,
+                        color: Colors.cyanAccent,
+                      ),
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
@@ -162,14 +180,23 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: _isLoading ? null : _runReview,
-                          icon: _isLoading 
-                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                          icon: _isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.black,
+                                    strokeWidth: 2,
+                                  ),
+                                )
                               : const Icon(Icons.security),
                           label: Text(_isLoading ? 'Auditing...' : 'Run Audit'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.cyanAccent,
                             foregroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
@@ -178,14 +205,23 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: _isLoading ? null : _deployFix,
-                            icon: _isLoading 
-                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
                                 : const Icon(Icons.healing),
                             label: const Text('Deploy Fix'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.pinkAccent,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
@@ -202,16 +238,31 @@ class _GithubPrScreenState extends State<GithubPrScreen> {
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.1)),
+                  border: Border.all(
+                    color: Colors.cyanAccent.withValues(alpha: 0.1),
+                  ),
                 ),
                 child: SingleChildScrollView(
                   child: _error != null
-                      ? Text('Error: $_error', style: const TextStyle(color: Colors.redAccent))
+                      ? Text(
+                          'Error: $_error',
+                          style: const TextStyle(color: Colors.redAccent),
+                        )
                       : _reviewResult != null
-                          ? Text(_reviewResult!, style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5))
-                          : const Center(
-                              child: Text('AI Audit Results will appear here.', style: TextStyle(color: Colors.grey)),
-                            ),
+                      ? Text(
+                          _reviewResult!,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                        )
+                      : const Center(
+                          child: Text(
+                            'AI Audit Results will appear here.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
                 ),
               ),
             ),

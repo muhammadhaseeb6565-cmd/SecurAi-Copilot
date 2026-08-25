@@ -47,7 +47,10 @@ class _SandboxScreenState extends State<SandboxScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Phishing Sandbox', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'AI Phishing Sandbox',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         iconTheme: IconThemeData(color: theme.colorScheme.primary),
       ),
       body: Padding(
@@ -57,10 +60,16 @@ class _SandboxScreenState extends State<SandboxScreen> {
             TextField(
               controller: _inputController,
               maxLines: 6,
-              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
+                fontSize: 14,
+              ),
               decoration: InputDecoration(
-                hintText: 'Paste suspicious email, SMS, or URL here to safely detonate and analyze it...',
-                hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                hintText:
+                    'Paste suspicious email, SMS, or URL here to safely detonate and analyze it...',
+                hintStyle: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -70,8 +79,15 @@ class _SandboxScreenState extends State<SandboxScreen> {
               height: 50,
               child: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _analyze,
-                icon: _isLoading 
-                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: theme.colorScheme.primary, strokeWidth: 2))
+                icon: _isLoading
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: theme.colorScheme.primary,
+                          strokeWidth: 2,
+                        ),
+                      )
                     : const Icon(Icons.security),
                 label: Text(_isLoading ? 'Detonating...' : 'Analyze Threat'),
                 style: ElevatedButton.styleFrom(
@@ -90,13 +106,21 @@ class _SandboxScreenState extends State<SandboxScreen> {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Markdown(
                     data: _result!,
                     styleSheet: MarkdownStyleSheet(
-                      p: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16),
-                      strong: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+                      p: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 16,
+                      ),
+                      strong: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

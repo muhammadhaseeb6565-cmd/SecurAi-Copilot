@@ -37,7 +37,9 @@ class _TrainingScreenState extends State<TrainingScreen> {
         _questions = questions;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to generate quiz: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to generate quiz: $e')));
       setState(() {
         _hasStarted = false;
       });
@@ -50,7 +52,7 @@ class _TrainingScreenState extends State<TrainingScreen> {
 
   void _submitAnswer(int selectedIndex) {
     if (_answered) return;
-    
+
     final currentQ = _questions[_currentQuestionIndex];
     final isCorrect = selectedIndex == currentQ['correct_index'];
 
@@ -58,10 +60,14 @@ class _TrainingScreenState extends State<TrainingScreen> {
       _answered = true;
       if (isCorrect) _score += 100;
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(isCorrect ? 'Correct! +100 Points' : 'Incorrect. ${currentQ['explanation'] ?? ""}'),
+        content: Text(
+          isCorrect
+              ? 'Correct! +100 Points'
+              : 'Incorrect. ${currentQ['explanation'] ?? ""}',
+        ),
         backgroundColor: isCorrect ? Colors.green : Colors.red,
         duration: const Duration(seconds: 4),
       ),
@@ -76,9 +82,9 @@ class _TrainingScreenState extends State<TrainingScreen> {
       });
     } else {
       // Quiz finished
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Quiz completed! Score: $_score')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Quiz completed! Score: $_score')));
       setState(() {
         _hasStarted = false;
       });
@@ -88,14 +94,21 @@ class _TrainingScreenState extends State<TrainingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("DevSecOps Training", style: TextStyle(fontWeight: FontWeight.bold))),
+      appBar: AppBar(
+        title: const Text(
+          "DevSecOps Training",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: !_hasStarted
             ? _buildSetupView()
             : _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
-                : _buildQuizView(),
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.cyanAccent),
+              )
+            : _buildQuizView(),
       ),
     );
   }
@@ -107,9 +120,21 @@ class _TrainingScreenState extends State<TrainingScreen> {
       children: [
         const Icon(Icons.school, size: 80, color: Colors.cyanAccent),
         const SizedBox(height: 24),
-        Text("DevSecOps Academy", style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
+        Text(
+          "DevSecOps Academy",
+          style: Theme.of(context).textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
         const SizedBox(height: 8),
-        Text("Enter a topic (e.g. 'Kubernetes Security', 'OWASP Top 10', 'IAM Roles') and our AI will generate a custom quiz for you.", textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7))),
+        Text(
+          "Enter a topic (e.g. 'Kubernetes Security', 'OWASP Top 10', 'IAM Roles') and our AI will generate a custom quiz for you.",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+        ),
         const SizedBox(height: 32),
         TextField(
           controller: _topicController,
@@ -124,7 +149,7 @@ class _TrainingScreenState extends State<TrainingScreen> {
         ElevatedButton(
           onPressed: _generateQuiz,
           child: const Text('Start Quiz'),
-        )
+        ),
       ],
     );
   }
@@ -141,18 +166,37 @@ class _TrainingScreenState extends State<TrainingScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Question ${_currentQuestionIndex + 1} / ${_questions.length}", style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                "Question ${_currentQuestionIndex + 1} / ${_questions.length}",
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(24)),
-                child: Text("Score: $_score", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              )
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Text(
+                  "Score: $_score",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),
-          Text(currentQ['question'] ?? "", style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            currentQ['question'] ?? "",
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 16),
-          if (currentQ['code_snippet'] != null && currentQ['code_snippet'].toString().trim().isNotEmpty) ...[
+          if (currentQ['code_snippet'] != null &&
+              currentQ['code_snippet'].toString().trim().isNotEmpty) ...[
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Theme.of(context).dividerColor),
@@ -162,8 +206,16 @@ class _TrainingScreenState extends State<TrainingScreen> {
                 data: currentQ['code_snippet'],
                 shrinkWrap: true,
                 styleSheet: MarkdownStyleSheet(
-                  code: TextStyle(backgroundColor: Theme.of(context).colorScheme.surface, fontFamily: 'monospace'),
-                  codeblockDecoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
+                  code: TextStyle(
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    fontFamily: 'monospace',
+                  ),
+                  codeblockDecoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),
@@ -172,17 +224,25 @@ class _TrainingScreenState extends State<TrainingScreen> {
           ...List.generate(options.length, (index) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
-              child: _buildAnswerButton(options[index].toString(), index, currentQ['correct_index']),
+              child: _buildAnswerButton(
+                options[index].toString(),
+                index,
+                currentQ['correct_index'],
+              ),
             );
           }),
-          
+
           if (_answered) ...[
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: _nextQuestion,
-              child: Text(_currentQuestionIndex < _questions.length - 1 ? "Next Question" : "Finish Quiz"),
-            )
-          ]
+              child: Text(
+                _currentQuestionIndex < _questions.length - 1
+                    ? "Next Question"
+                    : "Finish Quiz",
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -198,16 +258,23 @@ class _TrainingScreenState extends State<TrainingScreen> {
         bgColor = Colors.red.withValues(alpha: 0.1);
       }
     }
-    
+
     return OutlinedButton(
       style: OutlinedButton.styleFrom(
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.all(16),
         backgroundColor: bgColor,
-        side: BorderSide(color: (_answered && isCorrect) ? Colors.green : Theme.of(context).dividerColor),
+        side: BorderSide(
+          color: (_answered && isCorrect)
+              ? Colors.green
+              : Theme.of(context).dividerColor,
+        ),
       ),
       onPressed: () => _submitAnswer(index),
-      child: Text(text, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+      child: Text(
+        text,
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+      ),
     );
   }
 }

@@ -6,7 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static Future<String> getBaseUrl() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('api_base_url') ?? "https://securai-copilot.onrender.com";
+    return prefs.getString('api_base_url') ??
+        "https://securai-copilot.onrender.com";
   }
 
   static Future<String> getAiModel() async {
@@ -16,7 +17,12 @@ class ApiService {
 
   Future<String> get baseUrl async => await getBaseUrl();
 
-  Stream<String> streamMessage(String message, String persona, String language, {String? imageBase64}) async* {
+  Stream<String> streamMessage(
+    String message,
+    String persona,
+    String language, {
+    String? imageBase64,
+  }) async* {
     final client = http.Client();
     try {
       final url = await baseUrl;
@@ -24,10 +30,10 @@ class ApiService {
       final request = http.Request('POST', Uri.parse('$url/chat'));
       request.headers['Content-Type'] = 'application/json';
       final bodyMap = {
-        "message": message, 
-        "persona": persona, 
-        "language": language, 
-        "model": model
+        "message": message,
+        "persona": persona,
+        "language": language,
+        "model": model,
       };
       if (imageBase64 != null) {
         bodyMap["image_base64"] = imageBase64;
@@ -35,7 +41,7 @@ class ApiService {
       request.body = jsonEncode(bodyMap);
 
       final response = await client.send(request);
-      
+
       if (response.statusCode != 200) {
         yield "Server Error: ${response.statusCode}";
         return;
@@ -51,13 +57,21 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> sendMessage(String message, String persona, String endpoint) async {
+  Future<Map<String, dynamic>> sendMessage(
+    String message,
+    String persona,
+    String endpoint,
+  ) async {
     try {
       final url = await baseUrl;
       final response = await http.post(
         Uri.parse("$url/$endpoint"),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({"message": message, "persona": persona, "language": "en"}),
+        body: jsonEncode({
+          "message": message,
+          "persona": persona,
+          "language": "en",
+        }),
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -86,6 +100,7 @@ class ApiService {
       throw Exception("Error: $e");
     }
   }
+
   Future<String> generateReport(String alertDetails) async {
     return _postRequest('/generate-report', alertDetails, 'report');
   }
@@ -94,13 +109,23 @@ class ApiService {
     return _postRequest('/generate-patch', alertDetails, 'patch');
   }
 
-  static Future<Map<String, dynamic>?> githubAutoFix(String repo, int prNumber, String pat, String fixCode) async {
+  static Future<Map<String, dynamic>?> githubAutoFix(
+    String repo,
+    int prNumber,
+    String pat,
+    String fixCode,
+  ) async {
     try {
       final url = await getBaseUrl();
       final response = await http.post(
         Uri.parse('$url/github-auto-fix'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'repo': repo, 'pr_number': prNumber, 'pat': pat, 'fix_code': fixCode}),
+        body: jsonEncode({
+          'repo': repo,
+          'pr_number': prNumber,
+          'pat': pat,
+          'fix_code': fixCode,
+        }),
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -112,7 +137,11 @@ class ApiService {
     }
   }
 
-  Future<String> _postRequest(String endpoint, String alertDetails, String key) async {
+  Future<String> _postRequest(
+    String endpoint,
+    String alertDetails,
+    String key,
+  ) async {
     try {
       final url = await baseUrl;
       final model = await getAiModel();
@@ -121,7 +150,7 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({"alert_details": alertDetails, "model": model}),
       );
-      
+
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         return decoded[key] ?? "Error processing request.";
@@ -136,11 +165,13 @@ class ApiService {
   Future<List<Map<String, dynamic>>> fetchRealAlerts(String targetUrl) async {
     try {
       final url = await baseUrl;
-      final response = await http.post(
-        Uri.parse('$url/url-scan'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({"url": targetUrl}),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$url/url-scan'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({"url": targetUrl}),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -155,19 +186,22 @@ class ApiService {
         "title": "Scanner Error",
         "severity": "High",
         "time": "Just now",
-        "details": "Could not execute scan on the specified URL. Please check the backend connection."
-      }
+        "details":
+            "Could not execute scan on the specified URL. Please check the backend connection.",
+      },
     ];
   }
 
   Future<Map<String, dynamic>> breachScan(String email) async {
     try {
       final url = await baseUrl;
-      final response = await http.post(
-        Uri.parse('$url/breach-scan'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({"email": email}),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$url/breach-scan'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({"email": email}),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -192,7 +226,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> shodanScan(String ip, String apiKey) async {
+  static Future<Map<String, dynamic>?> shodanScan(
+    String ip,
+    String apiKey,
+  ) async {
     try {
       final url = await getBaseUrl();
       final response = await http.post(
@@ -210,7 +247,11 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> githubPrReview(String repo, int prNumber, String pat) async {
+  static Future<Map<String, dynamic>?> githubPrReview(
+    String repo,
+    int prNumber,
+    String pat,
+  ) async {
     try {
       final url = await getBaseUrl();
       final response = await http.post(
@@ -234,9 +275,12 @@ class ApiService {
       final url = await baseUrl;
       final request = http.Request('GET', Uri.parse('$url/metrics/stream'));
       final response = await client.send(request);
-      
+
       if (response.statusCode == 200) {
-        await for (final chunk in response.stream.transform(utf8.decoder).transform(const LineSplitter())) {
+        await for (final chunk
+            in response.stream
+                .transform(utf8.decoder)
+                .transform(const LineSplitter())) {
           if (chunk.startsWith('data: ')) {
             final jsonStr = chunk.substring(6);
             yield jsonDecode(jsonStr);

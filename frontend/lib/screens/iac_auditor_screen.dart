@@ -47,7 +47,10 @@ class _IacAuditorScreenState extends State<IacAuditorScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cloud / IaC Auditor', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Cloud / IaC Auditor',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         iconTheme: IconThemeData(color: theme.colorScheme.primary),
       ),
       body: Padding(
@@ -57,10 +60,17 @@ class _IacAuditorScreenState extends State<IacAuditorScreen> {
             TextField(
               controller: _inputController,
               maxLines: 8,
-              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12, fontFamily: 'monospace'),
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
+                fontSize: 12,
+                fontFamily: 'monospace',
+              ),
               decoration: InputDecoration(
-                hintText: 'Paste your Dockerfile, docker-compose.yml, or Kubernetes YAML here to check for privilege escalation or secrets...',
-                hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                hintText:
+                    'Paste your Dockerfile, docker-compose.yml, or Kubernetes YAML here to check for privilege escalation or secrets...',
+                hintStyle: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -70,8 +80,15 @@ class _IacAuditorScreenState extends State<IacAuditorScreen> {
               height: 50,
               child: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _audit,
-                icon: _isLoading 
-                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: theme.colorScheme.primary, strokeWidth: 2))
+                icon: _isLoading
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: theme.colorScheme.primary,
+                          strokeWidth: 2,
+                        ),
+                      )
                     : const Icon(Icons.cloud_done),
                 label: Text(_isLoading ? 'Auditing...' : 'Run Cloud Audit'),
               ),
@@ -85,17 +102,28 @@ class _IacAuditorScreenState extends State<IacAuditorScreen> {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Markdown(
                     data: _result!,
                     styleSheet: MarkdownStyleSheet(
-                      p: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
-                      code: TextStyle(color: theme.colorScheme.primary, backgroundColor: theme.colorScheme.surfaceContainerHighest),
+                      p: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 14,
+                      ),
+                      code: TextStyle(
+                        color: theme.colorScheme.primary,
+                        backgroundColor:
+                            theme.colorScheme.surfaceContainerHighest,
+                      ),
                       codeblockDecoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: theme.dividerColor.withValues(alpha: 0.3),
+                        ),
                       ),
                     ),
                   ),

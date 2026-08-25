@@ -26,9 +26,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _selectedPersona = widget.prefs.getString('persona') ?? "auditor";
     _selectedLanguage = widget.prefs.getString('language') ?? "English";
-    _selectedAiModel = widget.prefs.getString('ai_model') ?? "openai/gpt-oss-20b";
+    _selectedAiModel =
+        widget.prefs.getString('ai_model') ?? "openai/gpt-oss-20b";
     _requireBiometrics = widget.prefs.getBool('requireBiometrics') ?? false;
-    _apiUrlController.text = widget.prefs.getString('api_base_url') ?? "https://securai-copilot.onrender.com";
+    _apiUrlController.text =
+        widget.prefs.getString('api_base_url') ??
+        "https://securai-copilot.onrender.com";
   }
 
   @override
@@ -43,14 +46,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     for (var key in allKeys) {
       data[key] = widget.prefs.get(key);
     }
-    
+
     final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
-    
+
     Clipboard.setData(ClipboardData(text: jsonStr));
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Data copied to clipboard!')),
-    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Data copied to clipboard!')));
   }
 
   void _saveLanguage(String? value) {
@@ -59,9 +62,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _selectedLanguage = value;
         widget.prefs.setString('language', value);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Language updated to $value')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Language updated to $value')));
     }
   }
 
@@ -71,9 +74,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _selectedAiModel = value;
         widget.prefs.setString('ai_model', value);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('AI Model updated to $value')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('AI Model updated to $value')));
     }
   }
 
@@ -83,7 +86,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       widget.prefs.setBool('requireBiometrics', value);
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(value ? 'Biometric App Lock Enabled' : 'Biometric App Lock Disabled')),
+      SnackBar(
+        content: Text(
+          value ? 'Biometric App Lock Enabled' : 'Biometric App Lock Disabled',
+        ),
+      ),
     );
   }
 
@@ -93,16 +100,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _selectedPersona = value;
         widget.prefs.setString('persona', value);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Persona updated to $value')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Persona updated to $value')));
     }
   }
 
   void _saveApiUrl(String value) {
     widget.prefs.setString('api_base_url', value.trim());
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Backend API URL updated successfully. Restart app to apply.')),
+      const SnackBar(
+        content: Text(
+          'Backend API URL updated successfully. Restart app to apply.',
+        ),
+      ),
     );
   }
 
@@ -113,13 +124,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Settings',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Security & Privacy', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+          Text(
+            'Security & Privacy',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           SwitchListTile(
             title: const Text('Require Biometrics'),
             subtitle: const Text('Use Fingerprint/FaceID to unlock the app'),
@@ -129,13 +149,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ListTile(
             title: const Text('Export My Data'),
-            subtitle: const Text('Download a JSON copy of your personal settings and app data'),
+            subtitle: const Text(
+              'Download a JSON copy of your personal settings and app data',
+            ),
             trailing: const Icon(Icons.download, color: Colors.cyanAccent),
             onTap: _exportData,
           ),
           const Divider(),
           const SizedBox(height: 16),
-          Text('Appearance', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+          Text(
+            'Appearance',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           SwitchListTile(
             title: const Text('Dark Mode'),
             subtitle: const Text('Toggle between light and dark themes'),
@@ -147,7 +175,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
           const SizedBox(height: 16),
-          Text('AI Model Selection', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+          Text(
+            'AI Model Selection',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           Card(
             color: Theme.of(context).colorScheme.surface,
@@ -158,11 +192,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   isExpanded: true,
                   value: _selectedAiModel,
                   items: const [
-                    DropdownMenuItem(value: "openai/gpt-oss-20b", child: Text("GPT-OSS 20B (Recommended)")),
-                    DropdownMenuItem(value: "openai/gpt-oss-120b", child: Text("GPT-OSS 120B (Powerful)")),
-                    DropdownMenuItem(value: "llama-3.3-70b-versatile", child: Text("Llama 3.3 70B")),
-                    DropdownMenuItem(value: "gemma2-9b-it", child: Text("Gemma 2 9B")),
-                    DropdownMenuItem(value: "mixtral-8x7b-32768", child: Text("Mixtral 8x7B")),
+                    DropdownMenuItem(
+                      value: "openai/gpt-oss-20b",
+                      child: Text("GPT-OSS 20B (Recommended)"),
+                    ),
+                    DropdownMenuItem(
+                      value: "openai/gpt-oss-120b",
+                      child: Text("GPT-OSS 120B (Powerful)"),
+                    ),
+                    DropdownMenuItem(
+                      value: "llama-3.3-70b-versatile",
+                      child: Text("Llama 3.3 70B"),
+                    ),
+                    DropdownMenuItem(
+                      value: "gemma2-9b-it",
+                      child: Text("Gemma 2 9B"),
+                    ),
+                    DropdownMenuItem(
+                      value: "mixtral-8x7b-32768",
+                      child: Text("Mixtral 8x7B"),
+                    ),
                   ],
                   onChanged: _saveAiModel,
                 ),
@@ -171,7 +220,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
           const SizedBox(height: 16),
-          Text('Global Language', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+          Text(
+            'Global Language',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           Card(
             color: Theme.of(context).colorScheme.surface,
@@ -183,12 +238,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   value: _selectedLanguage,
                   items: const [
                     DropdownMenuItem(value: "English", child: Text("English")),
-                    DropdownMenuItem(value: "Spanish", child: Text("Español (Spanish)")),
-                    DropdownMenuItem(value: "French", child: Text("Français (French)")),
-                    DropdownMenuItem(value: "Japanese", child: Text("日本語 (Japanese)")),
-                    DropdownMenuItem(value: "Arabic", child: Text("العربية (Arabic)")),
+                    DropdownMenuItem(
+                      value: "Spanish",
+                      child: Text("Español (Spanish)"),
+                    ),
+                    DropdownMenuItem(
+                      value: "French",
+                      child: Text("Français (French)"),
+                    ),
+                    DropdownMenuItem(
+                      value: "Japanese",
+                      child: Text("日本語 (Japanese)"),
+                    ),
+                    DropdownMenuItem(
+                      value: "Arabic",
+                      child: Text("العربية (Arabic)"),
+                    ),
                     DropdownMenuItem(value: "Urdu", child: Text("اردو (Urdu)")),
-                    DropdownMenuItem(value: "Roman Urdu", child: Text("Roman Urdu")),
+                    DropdownMenuItem(
+                      value: "Roman Urdu",
+                      child: Text("Roman Urdu"),
+                    ),
                   ],
                   onChanged: _saveLanguage,
                 ),
@@ -197,7 +267,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
           const SizedBox(height: 16),
-          Text('AI Copilot Persona', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+          Text(
+            'AI Copilot Persona',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           Card(
             color: Theme.of(context).colorScheme.surface,
@@ -205,7 +281,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 RadioListTile<String>(
                   title: const Text("Security Auditor"),
-                  subtitle: const Text("Strict, concise, focuses purely on finding flaws."),
+                  subtitle: const Text(
+                    "Strict, concise, focuses purely on finding flaws.",
+                  ),
                   value: "auditor",
                   groupValue: _selectedPersona,
                   onChanged: (val) => _savePersona(val!),
@@ -213,7 +291,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 RadioListTile<String>(
                   title: const Text("Patient Teacher"),
-                  subtitle: const Text("Explains concepts simply with context and examples."),
+                  subtitle: const Text(
+                    "Explains concepts simply with context and examples.",
+                  ),
                   value: "teacher",
                   groupValue: _selectedPersona,
                   onChanged: (val) => _savePersona(val!),
@@ -221,7 +301,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 RadioListTile<String>(
                   title: const Text("Code Ninja"),
-                  subtitle: const Text("Provides fast, secure code snippets with minimal text."),
+                  subtitle: const Text(
+                    "Provides fast, secure code snippets with minimal text.",
+                  ),
                   value: "ninja",
                   groupValue: _selectedPersona,
                   onChanged: (val) => _savePersona(val!),
@@ -230,8 +312,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-                  const SizedBox(height: 8),
-          const Text("Database Connection", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text(
+            "Database Connection",
+            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Card(
             color: Theme.of(context).colorScheme.surface,
@@ -241,7 +326,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: const Text("Connected"),
               trailing: const Icon(Icons.check_circle, color: Colors.green),
             ),
-          )
+          ),
         ],
       ),
     );

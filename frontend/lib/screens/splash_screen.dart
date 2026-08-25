@@ -11,18 +11,28 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1))..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.9, end: 1.1).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-    
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(
+      begin: 0.9,
+      end: 1.1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
     Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AuthGuard(prefs: widget.prefs)));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AuthGuard(prefs: widget.prefs)),
+      );
     });
   }
 
@@ -48,10 +58,18 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   color: Colors.cyanAccent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   boxShadow: [
-                    BoxShadow(color: Colors.cyanAccent.withValues(alpha: 0.2), blurRadius: 40, spreadRadius: 10),
+                    BoxShadow(
+                      color: Colors.cyanAccent.withValues(alpha: 0.2),
+                      blurRadius: 40,
+                      spreadRadius: 10,
+                    ),
                   ],
                 ),
-                child: const Icon(Icons.security, size: 80, color: Colors.cyanAccent),
+                child: const Icon(
+                  Icons.security,
+                  size: 80,
+                  color: Colors.cyanAccent,
+                ),
               ),
             ),
             const SizedBox(height: 32),

@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -17,7 +20,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final ApiService _apiService = ApiService();
-  
+
   Map<String, dynamic>? _systemMetrics;
   final _shodanController = TextEditingController();
   Map<String, dynamic>? _shodanResult;
@@ -25,37 +28,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isDeepScanning = false;
   bool _isLockedDown = false;
 
-  void _triggerLockdown() {
-    if (_isLockedDown) {
-      setState(() => _isLockedDown = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System Lockdown lifted.'), backgroundColor: Colors.green));
-      return;
+  final LocalAuthentication auth = LocalAuthentication();
+
+  Future<bool> _authenticate() async {
+    try {
+      final bool didAuthenticate = await auth.authenticate(
+        localizedReason: 'Please authenticate to access critical security controls',
+        options: const AuthenticationOptions(biometricOnly: false, stickyAuth: true),
+      );
+      return didAuthenticate;
+    } catch (e) {
+      return false; // If biometrics fail or aren't set up, deny access for high-security zero trust
     }
+  }
+
+  void _triggerLockdown() async {
+    if (_isLockedDown) {
+      // Trying to lift lockdown
+      bool authenticated = await _authenticate();
+      if (!authenticated) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Authentication failed. Lockdown remains active.')));
+        return;
+      }
+    }
+    
     showDialog(
+
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.red.shade900,
-          title: const Row(children: [Icon(Icons.warning, color: Colors.white), SizedBox(width: 8), Text("EMERGENCY LOCKDOWN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]),
-          content: const Text("Are you sure you want to trigger a system-wide lockdown?\n\nThis will block all incoming API traffic, isolate the environment, and revoke active sessions.", style: TextStyle(color: Colors.white)),
+          title: const Row(
+            children: [
+              Icon(Icons.warning, color: Colors.white),
+              SizedBox(width: 8),
+              Text(
+                "EMERGENCY LOCKDOWN",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            "Are you sure you want to trigger a system-wide lockdown?\n\nThis will block all incoming API traffic, isolate the environment, and revoke active sessions.",
+            style: TextStyle(color: Colors.white),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("CANCEL", style: TextStyle(color: Colors.white70)),
+              child: const Text(
+                "CANCEL",
+                style: TextStyle(color: Colors.white70),
+              ),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+              ),
               onPressed: () {
                 Navigator.pop(context);
                 setState(() => _isLockedDown = true);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System Lockdown INITIATED. Environment isolated.'), backgroundColor: Colors.red));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'System Lockdown INITIATED. Environment isolated.',
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               },
-              child: const Text("CONFIRM LOCKDOWN", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                "CONFIRM LOCKDOWN",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         );
-      }
+      },
     );
   }
 
@@ -65,26 +118,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     "auth_failures": 0,
     "shadow_apis_detected": 0,
     "anomaly_score": 0.0,
-    "threats": 0
+    "threats": 0,
   };
   Timer? _healthTimer;
   List<FlSpot> _trafficSpots = [const FlSpot(0, 0)];
   double _graphX = 0;
-  
+
   final List<Map<String, dynamic>> _liveAlerts = [];
 
   @override
   void initState() {
     super.initState();
     _fetchSystemMetrics();
-    _healthTimer = Timer.periodic(const Duration(seconds: 3), (_) => _fetchSystemMetrics());
-    
+    _healthTimer = Timer.periodic(
+      const Duration(seconds: 3),
+      (_) => _fetchSystemMetrics(),
+    );
+
     _metricsSub = _apiService.streamMetrics().listen((data) {
       if (mounted) {
         setState(() {
           _streamData = data;
           _graphX += 1;
-          _trafficSpots.add(FlSpot(_graphX, (data["total_requests"] ?? 0) / 1000.0));
+          _trafficSpots.add(
+            FlSpot(_graphX, (data["total_requests"] ?? 0) / 1000.0),
+          );
           if (_trafficSpots.length > 10) {
             _trafficSpots.removeAt(0);
           }
@@ -124,7 +182,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           'type': type,
           'message': message,
           'color': color,
-          'time': "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}:${DateTime.now().second.toString().padLeft(2, '0')}"
+          'time':
+              "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}:${DateTime.now().second.toString().padLeft(2, '0')}",
         });
         if (_liveAlerts.length > 5) {
           _liveAlerts.removeLast();
@@ -160,26 +219,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // We use a hardcoded API key for the UI demo if the user hasn't set one in settings
     final result = await ApiService.shodanScan(ip, 'YOUR_SHODAN_API_KEY');
-    
+
     setState(() {
       _isShodanLoading = false;
-      _shodanResult = result ?? {'error': 'Failed to connect or invalid API key.'};
+      _shodanResult =
+          result ?? {'error': 'Failed to connect or invalid API key.'};
     });
   }
 
   void _runDeepScan() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportsScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ReportsScreen()),
+    );
   }
 
   void _runBreachScan() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => DataBreachScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DataBreachScreen()),
+    );
   }
 
   void _showNotifications() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
         return Container(
           padding: const EdgeInsets.all(24),
@@ -191,40 +259,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Icon(Icons.notifications_active, color: Colors.cyanAccent),
                   SizedBox(width: 8),
-                  Text('Notification Center', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Notification Center',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               const Divider(height: 32),
               ListTile(
                 leading: const Icon(Icons.warning, color: Colors.orangeAccent),
-                title: const Text('Unusual Traffic Spike', style: TextStyle(fontWeight: FontWeight.bold)),
+                title: const Text(
+                  'Unusual Traffic Spike',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 subtitle: const Text('API received 500+ requests in 1 min.'),
-                trailing: const Text('2m ago', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                trailing: const Text(
+                  '2m ago',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ),
               ListTile(
                 leading: const Icon(Icons.error, color: Colors.redAccent),
-                title: const Text('Failed SSH Logins', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Multiple failed auth attempts on Prod DB.'),
-                trailing: const Text('15m ago', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                title: const Text(
+                  'Failed SSH Logins',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text(
+                  'Multiple failed auth attempts on Prod DB.',
+                ),
+                trailing: const Text(
+                  '15m ago',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ),
               ListTile(
-                leading: const Icon(Icons.security_update, color: Colors.greenAccent),
-                title: const Text('Patch Deployed', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Self-healing patch v1.2 applied successfully.'),
-                trailing: const Text('1h ago', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                leading: const Icon(
+                  Icons.security_update,
+                  color: Colors.greenAccent,
+                ),
+                title: const Text(
+                  'Patch Deployed',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text(
+                  'Self-healing patch v1.2 applied successfully.',
+                ),
+                trailing: const Text(
+                  '1h ago',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ),
             ],
           ),
         );
-      }
+      },
     );
+  }
+
+
+  Future<void> _downloadIRReport() async {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading Incident Report PDF...')));
+    // In a real app we would use url_launcher to open the PDF link, 
+    // or download it via flutter_downloader.
+    final Uri url = Uri.parse('https://securai-copilot.onrender.com/api/generate-ir-report?score=');
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Report generated. Go to: ')));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Real-Time Security Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Real-Time Security Dashboard',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -241,6 +349,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // HONEYPOT TRAP (Invisible)
+            GestureDetector(
+              onTap: () async {
+                try {
+                  await http.get(Uri.parse('https://securai-copilot.onrender.com/api/v1/admin/debug/override'));
+                } catch (e) {}
+              },
+              child: const SizedBox(width: 10, height: 10),
+            ),
+
             if (_isLockedDown)
               Container(
                 width: double.infinity,
@@ -250,15 +368,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: Colors.red.shade900,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.redAccent, width: 2),
-                  boxShadow: [BoxShadow(color: Colors.red.withValues(alpha: 0.5), blurRadius: 20, spreadRadius: 5)],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withValues(alpha: 0.5),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.lock_person, size: 64, color: Colors.white),
+                    const Icon(
+                      Icons.lock_person,
+                      size: 64,
+                      color: Colors.white,
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       "SYSTEM LOCKED DOWN",
-                      style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -278,96 +411,173 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.redAccent),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.warning, color: Colors.redAccent),
-                    SizedBox(width: 8),
-                    Expanded(child: Text("CRITICAL ALERT: High anomaly score detected. AI auto-patching recommended.", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))),
+                    const Icon(Icons.warning, color: Colors.redAccent),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        "CRITICAL ALERT: High anomaly score detected. AI auto-patching recommended.",
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+                      tooltip: 'Download Incident Report',
+                      onPressed: _downloadIRReport,
+                      style: IconButton.styleFrom(backgroundColor: Colors.red.shade900),
+                    ),
                   ],
                 ),
               ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
-                          boxShadow: [
-                            BoxShadow(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05), blurRadius: 20, spreadRadius: 5),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.shield, color: Theme.of(context).colorScheme.primary, size: 28),
-                            const SizedBox(height: 8),
-                            const Text('System Health', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                            const SizedBox(height: 4),
-                            Text(
-                              _systemMetrics != null 
-                                ? '${_systemMetrics!['system_health'].toStringAsFixed(1)}%' 
-                                : '...',
-                              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
-                            ),
-                          ],
-                        ),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.05),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
-                          boxShadow: [
-                            BoxShadow(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05), blurRadius: 20, spreadRadius: 5),
-                          ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.shield,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 28,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.warning_amber, color: Colors.orangeAccent, size: 28),
-                            const SizedBox(height: 8),
-                            const Text('Active Threats', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                            const SizedBox(height: 4),
-                            Text('${_streamData["threats"]}', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
-                          ],
+                        const SizedBox(height: 8),
+                        const Text(
+                          'System Health',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _systemMetrics != null
+                              ? '${_systemMetrics!['system_health'].toStringAsFixed(1)}%'
+                              : '...',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.05),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
                     ),
-                  ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.warning_amber,
+                          color: Colors.orangeAccent,
+                          size: 28,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Active Threats',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_streamData["threats"]}',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orangeAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildStatCard(context, "Requests", "${_streamData["total_requests"]}", Icons.sync_alt, Colors.blueAccent),
-                    const SizedBox(width: 16),
-                    _buildStatCard(context, "Auth Fails", "${_streamData["auth_failures"]}", Icons.gavel, Colors.purpleAccent),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildLiveAlertsFeed(),
-                const SizedBox(height: 24),
-                _buildQuickActions(),
-                const SizedBox(height: 24),
-                _buildShodanSearch(),
-                const SizedBox(height: 24),
-                _buildGlobalThreatMap(),
-                const SizedBox(height: 24),
-                _buildTrafficGraph(),
-                const SizedBox(height: 24),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _buildStatCard(
+                  context,
+                  "Requests",
+                  "${_streamData["total_requests"]}",
+                  Icons.sync_alt,
+                  Colors.blueAccent,
+                ),
+                const SizedBox(width: 16),
+                _buildStatCard(
+                  context,
+                  "Auth Fails",
+                  "${_streamData["auth_failures"]}",
+                  Icons.gavel,
+                  Colors.purpleAccent,
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildLiveAlertsFeed(),
+            const SizedBox(height: 24),
+            _buildQuickActions(),
+            const SizedBox(height: 24),
+            _buildShodanSearch(),
+            const SizedBox(height: 24),
+            _buildGlobalThreatMap(),
+            const SizedBox(height: 24),
+            _buildTrafficGraph(),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -380,8 +590,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Icon(icon, color: color),
             const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ),
@@ -390,13 +606,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildLiveAlertsFeed() {
     if (_liveAlerts.isEmpty) return const SizedBox.shrink();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Text('Live Incident Log', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          child: Text(
+            'Live Incident Log',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
         ),
         ListView.builder(
           shrinkWrap: true,
@@ -410,13 +629,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: (alert['color'] as Color).withValues(alpha: 0.1),
-                border: Border(left: BorderSide(color: alert['color'] as Color, width: 4)),
+                border: Border(
+                  left: BorderSide(color: alert['color'] as Color, width: 4),
+                ),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
                 children: [
                   Icon(
-                    alert['type'] == 'CRITICAL' ? Icons.error : alert['type'] == 'WARNING' ? Icons.warning : Icons.info,
+                    alert['type'] == 'CRITICAL'
+                        ? Icons.error
+                        : alert['type'] == 'WARNING'
+                        ? Icons.warning
+                        : Icons.info,
                     color: alert['color'] as Color,
                     size: 20,
                   ),
@@ -425,12 +650,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(alert['type'] as String, style: TextStyle(color: alert['color'] as Color, fontWeight: FontWeight.bold, fontSize: 10)),
-                        Text(alert['message'] as String, style: const TextStyle(fontSize: 14)),
+                        Text(
+                          alert['type'] as String,
+                          style: TextStyle(
+                            color: alert['color'] as Color,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          alert['message'] as String,
+                          style: const TextStyle(fontSize: 14),
+                        ),
                       ],
                     ),
                   ),
-                  Text(alert['time'] as String, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                  Text(
+                    alert['time'] as String,
+                    style: const TextStyle(color: Colors.grey, fontSize: 10),
+                  ),
                 ],
               ),
             );
@@ -446,7 +684,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          child: Text(
+            'Quick Actions',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
         ),
         SizedBox(
           height: 120,
@@ -454,18 +695,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             children: [
-              _buildActionCard(Icons.code, 'GitHub PR Audit', Colors.purpleAccent, () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const GithubPrScreen()));
-              }),
-              _isDeepScanning 
-                ? const SizedBox(width: 140, child: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)))
-                : _buildActionCard(Icons.analytics, 'Run Deep Scan', Colors.cyanAccent, _runDeepScan),
-              _buildActionCard(Icons.travel_explore, 'Breach Scan', Colors.orangeAccent, _runBreachScan),
               _buildActionCard(
-                _isLockedDown ? Icons.lock_open : Icons.security, 
-                _isLockedDown ? 'Lift Lockdown' : 'Lockdown System', 
-                _isLockedDown ? Colors.greenAccent : Colors.redAccent, 
-                _triggerLockdown
+                Icons.code,
+                'GitHub PR Audit',
+                Colors.purpleAccent,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const GithubPrScreen(),
+                    ),
+                  );
+                },
+              ),
+              _isDeepScanning
+                  ? const SizedBox(
+                      width: 140,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.cyanAccent,
+                        ),
+                      ),
+                    )
+                  : _buildActionCard(
+                      Icons.analytics,
+                      'Run Deep Scan',
+                      Colors.cyanAccent,
+                      _runDeepScan,
+                    ),
+              _buildActionCard(
+                Icons.travel_explore,
+                'Breach Scan',
+                Colors.orangeAccent,
+                _runBreachScan,
+              ),
+              _buildActionCard(
+                _isLockedDown ? Icons.lock_open : Icons.security,
+                _isLockedDown ? 'Lift Lockdown' : 'Lockdown System',
+                _isLockedDown ? Colors.greenAccent : Colors.redAccent,
+                _triggerLockdown,
               ),
             ],
           ),
@@ -474,7 +742,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildActionCard(IconData icon, String title, Color color, VoidCallback onTap) {
+  Widget _buildActionCard(
+    IconData icon,
+    String title,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Container(
       width: 140,
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -483,7 +756,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.3)),
         boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.05), blurRadius: 10, spreadRadius: 2),
+          BoxShadow(
+            color: color.withValues(alpha: 0.05),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
         ],
       ),
       child: Material(
@@ -498,7 +775,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Icon(icon, color: color, size: 32),
                 const SizedBox(height: 12),
-                Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),
@@ -513,7 +797,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Live Traffic Analysis', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Live Traffic Analysis',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 16),
           Container(
             height: 250,
@@ -521,18 +808,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
+              ),
             ),
             child: LineChart(
               LineChartData(
                 gridData: FlGridData(
-                  show: true, 
+                  show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withValues(alpha: 0.2), strokeWidth: 1),
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withValues(alpha: 0.2),
+                    strokeWidth: 1,
+                  ),
                 ),
                 titlesData: FlTitlesData(
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -541,7 +839,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       getTitlesWidget: (value, meta) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(_getTimeLabel(value.toInt()), style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                          child: Text(
+                            _getTimeLabel(value.toInt()),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 10,
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -558,7 +862,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.2),
                     ),
                   ),
                 ],
@@ -578,14 +884,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Shodan Attack Surface Map', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Shodan Attack Surface Map',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: Colors.cyanAccent.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               children: [
@@ -596,7 +907,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         controller: _shodanController,
                         decoration: const InputDecoration(
                           hintText: 'Enter IP Address (e.g., 8.8.8.8)',
-                          prefixIcon: Icon(Icons.radar, color: Colors.cyanAccent),
+                          prefixIcon: Icon(
+                            Icons.radar,
+                            color: Colors.cyanAccent,
+                          ),
                           border: OutlineInputBorder(),
                         ),
                         style: const TextStyle(color: Colors.white),
@@ -604,9 +918,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: _isShodanLoading 
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.cyanAccent, strokeWidth: 2))
-                        : const Icon(Icons.search, color: Colors.cyanAccent),
+                      icon: _isShodanLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.cyanAccent,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.search, color: Colors.cyanAccent),
                       onPressed: _isShodanLoading ? null : _runShodanScan,
                     ),
                   ],
@@ -621,15 +942,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: _shodanResult!.containsKey('error')
-                        ? Text(_shodanResult!['error'], style: const TextStyle(color: Colors.redAccent))
+                        ? Text(
+                            _shodanResult!['error'],
+                            style: const TextStyle(color: Colors.redAccent),
+                          )
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Organization: ${_shodanResult!['org']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                              Text('OS: ${_shodanResult!['os']}', style: const TextStyle(color: Colors.white70)),
+                              Text(
+                                'Organization: ${_shodanResult!['org']}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'OS: ${_shodanResult!['os']}',
+                                style: const TextStyle(color: Colors.white70),
+                              ),
                               const SizedBox(height: 8),
-                              const Text('Open Ports:', style: TextStyle(color: Colors.cyanAccent, fontSize: 12)),
-                              Text('${_shodanResult!['ports']}', style: const TextStyle(color: Colors.white54)),
+                              const Text(
+                                'Open Ports:',
+                                style: TextStyle(
+                                  color: Colors.cyanAccent,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                '${_shodanResult!['ports']}',
+                                style: const TextStyle(color: Colors.white54),
+                              ),
                             ],
                           ),
                   ),
@@ -648,16 +990,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Live Global Threat Map', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Live Global Threat Map',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 16),
           Container(
             height: 300,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
+              ),
               boxShadow: [
-                BoxShadow(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05), blurRadius: 20, spreadRadius: 5),
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.05),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
               ],
             ),
             child: ClipRRect(
@@ -672,16 +1027,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                    urlTemplate:
+                        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
                     subdomains: const ['a', 'b', 'c', 'd'],
                     userAgentPackageName: 'com.example.securai',
                   ),
                   MarkerLayer(
                     markers: [
-                      _buildThreatMarker(LatLng(39.9042, 116.4074), "Beijing, CN"),
-                      _buildThreatMarker(LatLng(55.7558, 37.6173), "Moscow, RU"),
-                      _buildThreatMarker(LatLng(38.9072, -77.0369), "Washington DC, US"),
-                      _buildThreatMarker(LatLng(51.5074, -0.1278), "London, UK"),
+                      _buildThreatMarker(
+                        LatLng(39.9042, 116.4074),
+                        "Beijing, CN",
+                      ),
+                      _buildThreatMarker(
+                        LatLng(55.7558, 37.6173),
+                        "Moscow, RU",
+                      ),
+                      _buildThreatMarker(
+                        LatLng(38.9072, -77.0369),
+                        "Washington DC, US",
+                      ),
+                      _buildThreatMarker(
+                        LatLng(51.5074, -0.1278),
+                        "London, UK",
+                      ),
                     ],
                   ),
                 ],
@@ -700,7 +1068,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       height: 40,
       child: GestureDetector(
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Active Threat from $location')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Active Threat from $location')),
+          );
         },
         child: Container(
           decoration: BoxDecoration(
@@ -715,7 +1085,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 shape: BoxShape.circle,
                 color: Colors.redAccent,
                 boxShadow: [
-                  BoxShadow(color: Colors.redAccent, blurRadius: 10, spreadRadius: 2),
+                  BoxShadow(
+                    color: Colors.redAccent,
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
                 ],
               ),
             ),

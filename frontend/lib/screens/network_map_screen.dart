@@ -7,7 +7,8 @@ class NetworkMapScreen extends StatefulWidget {
   State<NetworkMapScreen> createState() => _NetworkMapScreenState();
 }
 
-class _NetworkMapScreenState extends State<NetworkMapScreen> with SingleTickerProviderStateMixin {
+class _NetworkMapScreenState extends State<NetworkMapScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
 
   @override
@@ -25,7 +26,12 @@ class _NetworkMapScreenState extends State<NetworkMapScreen> with SingleTickerPr
     super.dispose();
   }
 
-  Widget _buildNode(String name, IconData icon, Color color, {bool isUnderAttack = false}) {
+  Widget _buildNode(
+    String name,
+    IconData icon,
+    Color color, {
+    bool isUnderAttack = false,
+  }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -34,8 +40,18 @@ class _NetworkMapScreenState extends State<NetworkMapScreen> with SingleTickerPr
             opacity: _pulseController,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(12)),
-              child: const Text("ATTACK DETECTED", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                "ATTACK DETECTED",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           )
         else
@@ -47,8 +63,19 @@ class _NetworkMapScreenState extends State<NetworkMapScreen> with SingleTickerPr
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.2),
             shape: BoxShape.circle,
-            border: Border.all(color: isUnderAttack ? Colors.red : color, width: isUnderAttack ? 3 : 1),
-            boxShadow: isUnderAttack ? [BoxShadow(color: Colors.red.withValues(alpha: 0.5), blurRadius: 20, spreadRadius: 5)] : [],
+            border: Border.all(
+              color: isUnderAttack ? Colors.red : color,
+              width: isUnderAttack ? 3 : 1,
+            ),
+            boxShadow: isUnderAttack
+                ? [
+                    BoxShadow(
+                      color: Colors.red.withValues(alpha: 0.5),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ]
+                : [],
           ),
           child: Icon(icon, size: 36, color: color),
         ),
@@ -59,13 +86,22 @@ class _NetworkMapScreenState extends State<NetworkMapScreen> with SingleTickerPr
   }
 
   Widget _buildLine() {
-    return Container(width: 40, height: 2, color: Colors.grey.withValues(alpha: 0.5));
+    return Container(
+      width: 40,
+      height: 2,
+      color: Colors.grey.withValues(alpha: 0.5),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Interactive Architecture Map", style: TextStyle(fontWeight: FontWeight.bold))),
+      appBar: AppBar(
+        title: const Text(
+          "Interactive Architecture Map",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
       body: Center(
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -78,7 +114,12 @@ class _NetworkMapScreenState extends State<NetworkMapScreen> with SingleTickerPr
                 _buildLine(),
                 _buildNode("API Gateway", Icons.router, Colors.purple),
                 _buildLine(),
-                _buildNode("Auth Service", Icons.security, Colors.orange, isUnderAttack: true), // Simulate attack
+                _buildNode(
+                  "Auth Service",
+                  Icons.security,
+                  Colors.orange,
+                  isUnderAttack: true,
+                ), // Simulate attack
                 _buildLine(),
                 _buildNode("User DB", Icons.storage, Colors.green),
               ],
