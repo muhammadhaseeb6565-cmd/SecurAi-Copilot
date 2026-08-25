@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -72,7 +74,7 @@ class ApiService {
   ) async {
     try {
       final url = await baseUrl;
-      final response = await http.post(
+      final response = await _securePost(
         Uri.parse("$url/$endpoint"),
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +100,7 @@ class ApiService {
   Future<List<dynamic>> generateQuiz(String topic) async {
     try {
       final url = await baseUrl;
-      final response = await http.post(
+      final response = await _securePost(
         Uri.parse("$url/generate-quiz"),
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +135,7 @@ class ApiService {
   ) async {
     try {
       final url = await getBaseUrl();
-      final response = await http.post(
+      final response = await _securePost(
         Uri.parse('$url/github-auto-fix'),
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +167,7 @@ class ApiService {
     try {
       final url = await baseUrl;
       final model = await getAiModel();
-      final response = await http.post(
+      final response = await _securePost(
         Uri.parse('$url$endpoint'),
         headers: {
           'Content-Type': 'application/json',
@@ -268,7 +270,7 @@ class ApiService {
   ) async {
     try {
       final url = await getBaseUrl();
-      final response = await http.post(
+      final response = await _securePost(
         Uri.parse('$url/shodan-scan'),
         headers: {
           'Content-Type': 'application/json',
@@ -294,7 +296,7 @@ class ApiService {
   ) async {
     try {
       final url = await getBaseUrl();
-      final response = await http.post(
+      final response = await _securePost(
         Uri.parse('$url/github-pr'),
         headers: {
           'Content-Type': 'application/json',

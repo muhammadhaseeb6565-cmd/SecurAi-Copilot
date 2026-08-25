@@ -26,6 +26,33 @@ DANGEROUS_PATTERNS = ["<script>", "UNION SELECT", "DROP TABLE", "OR 1=1", "exec(
 async def active_threat_defense(request: Request, call_next):
     client_ip = request.client.host if request.client else "unknown"
 
+    # LAYER 21: Cryptographic Payload Integrity (HMAC-SHA256)
+    if request.method in ["POST", "PUT", "PATCH"]:
+        body_bytes = await request.body()
+        if body_bytes:
+            signature = request.headers.get("X-Payload-Signature")
+            req_time = request.headers.get("X-Request-Time")
+            
+            if not signature or not req_time:
+                BANNED_IPS.add(client_ip)
+                return JSONResponse(status_code=403, content={"detail": "Missing military-grade cryptographic signature."})
+            
+            import hmac
+            import hashlib
+            secret = b"NuclearGradeSecurAISignature2026"
+            message = req_time.encode() + body_bytes
+            expected_mac = hmac.new(secret, message, hashlib.sha256).hexdigest()
+            
+            if not hmac.compare_digest(expected_mac, signature):
+                BANNED_IPS.add(client_ip)
+                return JSONResponse(status_code=403, content={"detail": "Payload Tampering Detected. Connection severed."})
+            
+            # Re-inject the body so downstream endpoints can parse it
+            async def new_receive():
+                return {"type": "http.request", "body": body_bytes}
+            request._receive = new_receive
+
+
     # LAYER 18: Strict Automated Scanner Fingerprinting
     user_agent = request.headers.get("User-Agent", "").lower()
     blocked_agents = ["curl", "postman", "python", "nmap", "sqlmap", "zgrab", "masscan", "nikto", "dirb", "wget", "insomnia", "httpie"]
