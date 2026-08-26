@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
@@ -53,7 +56,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Data copied to clipboard!')));
+    ).showSnackBar(const SnackBar(content: Text('JSON copied to clipboard!')));
+  }
+
+  Future<void> _exportDataToPdf() async {
+    final allKeys = widget.prefs.getKeys();
+    final Map<String, dynamic> data = {};
+    for (var key in allKeys) {
+      data[key] = widget.prefs.get(key);
+    }
+
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
+
+    final pdf = pw.Document();
+    
+    // Add page
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('SecurAI Copilot - Exported Configuration', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 20),
+              pw.Text(jsonStr, style: const pw.TextStyle(fontSize: 12)),
+            ]
+          );
+        },
+      ),
+    );
+
+    // Prompt user to save/share the PDF
+    await Printing.sharePdf(bytes: await pdf.save(), filename: 'SecurAI_Settings.pdf');
   }
 
   void _saveLanguage(String? value) {
@@ -148,12 +183,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: _saveBiometrics,
           ),
           ListTile(
-            title: const Text('Export My Data'),
+            title: const Text('Copy JSON Configuration'),
             subtitle: const Text(
-              'Download a JSON copy of your personal settings and app data',
+              'Copy your personal settings and app data as JSON to clipboard',
             ),
-            trailing: const Icon(Icons.download, color: Colors.cyanAccent),
+            trailing: const Icon(Icons.copy, color: Colors.cyanAccent),
             onTap: _exportData,
+          ),
+          ListTile(
+            title: const Text('Export JSON as PDF'),
+            subtitle: const Text(
+              'Generate a PDF document of your JSON configuration',
+            ),
+            trailing: const Icon(Icons.picture_as_pdf, color: Colors.cyanAccent),
+            onTap: _exportDataToPdf,
           ),
           const Divider(),
           const SizedBox(height: 16),
