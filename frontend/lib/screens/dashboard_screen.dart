@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'package:printing/printing.dart';
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:http/http.dart' as http;
@@ -317,11 +319,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 
   Future<void> _downloadIRReport() async {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading Incident Report PDF...')));
-    // In a real app we would use url_launcher to open the PDF link, 
-    // or download it via flutter_downloader.
-    final Uri url = Uri.parse('https://securai-copilot.onrender.com/api/generate-ir-report?score=');
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Report generated. Go to: ')));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading Incident Report PDF...')));
+    }
+    
+    try {
+      final baseUrl = await ApiService.getBaseUrl();
+      final Uri url = Uri.parse('$baseUrl/api/generate-ir-report?score=0.0');
+      final response = await http.get(url);
+      
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF Generated! Opening preview...')));
+        }
+        await Printing.sharePdf(bytes: response.bodyBytes, filename: 'Incident_Report.pdf');
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to download: ${response.statusCode}')));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error downloading PDF: $e')));
+      }
+    }
   }
 
   @override
