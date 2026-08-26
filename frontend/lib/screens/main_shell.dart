@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboard_screen.dart';
+import 'training_screen.dart';
 import 'chat_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
 import 'network_map_screen.dart';
-import 'training_screen.dart';
 import 'cve_feed_screen.dart';
 import 'utilities_screen.dart';
 import 'sandbox_screen.dart';

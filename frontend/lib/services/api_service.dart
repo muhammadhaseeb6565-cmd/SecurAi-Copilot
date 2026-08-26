@@ -129,9 +129,13 @@ class ApiService {
         body: jsonEncode({"topic": topic}),
       );
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded.containsKey('error')) {
+          throw Exception(decoded['error']);
+        }
+        return decoded as List<dynamic>;
       } else {
-        throw Exception("Failed to generate quiz");
+        throw Exception("Failed to generate quiz: ${response.statusCode}");
       }
     } catch (e) {
       throw Exception("Error: $e");

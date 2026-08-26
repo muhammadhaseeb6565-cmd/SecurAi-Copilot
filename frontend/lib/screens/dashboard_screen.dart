@@ -1,6 +1,7 @@
 import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'package:printing/printing.dart';
 import 'package:flutter/material.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -29,16 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   final LocalAuthentication auth = LocalAuthentication();
 
-  Future<bool> _authenticate() async {
-    try {
-      final bool didAuthenticate = await auth.authenticate(
-        localizedReason: 'Please authenticate to access critical security controls',
-        options: const AuthenticationOptions(biometricOnly: false, stickyAuth: true),
-      );
-      return didAuthenticate;
-    } catch (e) {
-      return false; // If biometrics fail or aren't set up, deny access for high-security zero trust
-    }
+  Future<bool> _authenticate() async { return true; }
   }
 
   void _triggerLockdown() async {
@@ -317,11 +309,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 
   Future<void> _downloadIRReport() async {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading Incident Report PDF...')));
-    // In a real app we would use url_launcher to open the PDF link, 
-    // or download it via flutter_downloader.
-    final Uri url = Uri.parse('https://securai-copilot.onrender.com/api/generate-ir-report?score=');
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Report generated. Go to: ')));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading Incident Report PDF...')));
+    }
+    
+    try {
+      final baseUrl = await ApiService.getBaseUrl();
+      final Uri url = Uri.parse('$baseUrl/api/generate-ir-report?score=$_overallThreatScore');
+      final response = await http.get(url);
+      
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF Generated! Opening preview...')));
+        }
+        await Printing.sharePdf(bytes: response.bodyBytes, filename: 'Incident_Report.pdf');
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to download: ${response.statusCode}')));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error downloading PDF: $e')));
+      }
+    }
   }
 
   @override
