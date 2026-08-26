@@ -182,8 +182,7 @@ class SecurAIApp extends StatefulWidget {
 
 class _SecurAIAppState extends State<SecurAIApp> with WidgetsBindingObserver {
   bool _isSecureLocked = false;
-  final LocalAuthentication auth = LocalAuthentication();
-
+  
   @override
   void initState() {
     super.initState();
@@ -226,7 +225,7 @@ class _SecurAIAppState extends State<SecurAIApp> with WidgetsBindingObserver {
                 const Text('IRON VAULT LOCKED', style: TextStyle(color: Colors.redAccent, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2)),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _requireBiometrics,
+                  onPressed: () {},
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
                   child: const Text('UNLOCK SESSION'),
                 )

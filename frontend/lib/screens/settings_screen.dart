@@ -18,6 +18,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedPersona = "auditor";
   String _selectedLanguage = "English";
   String _selectedAiModel = "openai/gpt-oss-20b";
+  bool _requireBiometrics = false;
   final TextEditingController _apiUrlController = TextEditingController();
 
   @override
@@ -27,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _selectedLanguage = widget.prefs.getString('language') ?? "English";
     _selectedAiModel =
         widget.prefs.getString('ai_model') ?? "openai/gpt-oss-20b";
+    _requireBiometrics = widget.prefs.getBool('requireBiometrics') ?? false;
     _apiUrlController.text =
         widget.prefs.getString('api_base_url') ??
         "https://securai-copilot.onrender.com";
@@ -76,6 +78,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('AI Model updated to $value')));
     }
+  }
+
+  void _saveBiometrics(bool value) {
+    setState(() {
+      _requireBiometrics = value;
+      widget.prefs.setBool('requireBiometrics', value);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          value ? 'Biometric App Lock Enabled' : 'Biometric App Lock Disabled',
+        ),
+      ),
+    );
   }
 
   void _savePersona(String? value) {
