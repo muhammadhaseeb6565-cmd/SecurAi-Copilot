@@ -4,6 +4,10 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 from core.security_rag import stream_security_copilot, generate_incident_report, generate_code_patch
 import asyncio
+import os
+from groq import Groq
+
+groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
 import json
 import random
 import subprocess
@@ -19,7 +23,28 @@ app = FastAPI(title="SecurAI Mobile Backend")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+
+SUPABASE_URL = "https://rnjffzwflbbyznzhcqpg.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_AGB2Fv2K6FXtyVeVLa_tWA_LE4foSrP"
+
+def log_threat_to_supabase(ip: str, attack_type: str):
+    try:
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+        }
+        data = {
+            "ip_address": ip,
+            "attack_type": attack_type
+        }
+        requests.post(f"{SUPABASE_URL}/rest/v1/threat_logs", headers=headers, json=data, timeout=2)
+    except Exception as e:
+        print(f"Failed to log threat: {e}")
+
 BANNED_IPS = set()
+
 DANGEROUS_PATTERNS = ["<script>", "UNION SELECT", "DROP TABLE", "OR 1=1", "exec(", "system("]
 
 @app.middleware("http")
@@ -35,6 +60,7 @@ async def active_threat_defense(request: Request, call_next):
             
             if not signature or not req_time:
                 BANNED_IPS.add(client_ip)
+                log_threat_to_supabase(client_ip, "Missing HMAC Signature")
                 return JSONResponse(status_code=403, content={"detail": "Missing military-grade cryptographic signature."})
             
             import hmac
@@ -45,6 +71,7 @@ async def active_threat_defense(request: Request, call_next):
             
             if not hmac.compare_digest(expected_mac, signature):
                 BANNED_IPS.add(client_ip)
+                log_threat_to_supabase(client_ip, "HMAC Payload Tampering")
                 return JSONResponse(status_code=403, content={"detail": "Payload Tampering Detected. Connection severed."})
             
             # Re-inject the body so downstream endpoints can parse it
@@ -58,18 +85,21 @@ async def active_threat_defense(request: Request, call_next):
     blocked_agents = ["curl", "postman", "python", "nmap", "sqlmap", "zgrab", "masscan", "nikto", "dirb", "wget", "insomnia", "httpie"]
     if any(agent in user_agent for agent in blocked_agents):
         BANNED_IPS.add(client_ip)
+        log_threat_to_supabase(client_ip, f"Automated Tool Fingerprinted ({user_agent})")
         return JSONResponse(status_code=403, content={"detail": "Automated tool fingerprinted and blacklisted."})
         
     # LAYER 19: Canary Token Trap (Radioactive API Key)
     auth_header = request.headers.get("Authorization", "")
     if "sk-live-7x9qM32PjL5vRk9bN2mZ1xQ4" in auth_header or "sk-live-7x9qM32PjL5vRk9bN2mZ1xQ4" in request.url.path:
         BANNED_IPS.add(client_ip)
+        log_threat_to_supabase(client_ip, "Honeypot Canary Token Triggered")
         return JSONResponse(status_code=403, content={"detail": "Canary token triggered. IP permanently blacklisted."})
         
     # LAYER 20: Micro Content-Length Hard Limit (Anti-Slowloris/Buffer Overflow)
     content_length = request.headers.get("Content-Length")
     if content_length and int(content_length) > 15360: # 15KB max payload
         BANNED_IPS.add(client_ip)
+        log_threat_to_supabase(client_ip, "Payload Oversize (Buffer Overflow attempt)")
         return JSONResponse(status_code=413, content={"detail": "Payload exceeds strict micro-limit. Connection severed."})
 
     if client_ip in BANNED_IPS:
@@ -80,6 +110,7 @@ async def active_threat_defense(request: Request, call_next):
     for pattern in DANGEROUS_PATTERNS:
         if pattern.lower() in url_string:
             BANNED_IPS.add(client_ip)
+            log_threat_to_supabase(client_ip, f"Malicious Pattern Detected: {pattern}")
             return JSONResponse(status_code=403, content={"error": "HACKING ATTEMPT DETECTED. IP BANNED."})
 
     # Validate Mobile App Signature (Defense against direct API hammering)
@@ -430,6 +461,7 @@ import io
 async def honeypot_trap(request: Request):
     client_ip = request.client.host if request.client else 'unknown'
     BANNED_IPS.add(client_ip)
+    log_threat_to_supabase(client_ip, 'Admin Honeypot Endpoint Probed')
     return JSONResponse(
         status_code=403, 
         content={'error': 'HONEYPOT TRIGGERED. YOU ARE PERMANENTLY BANNED.'}

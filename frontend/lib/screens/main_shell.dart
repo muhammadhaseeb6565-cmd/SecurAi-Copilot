@@ -5,6 +5,7 @@ import 'training_screen.dart';
 import 'chat_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
+import 'threat_logs_screen.dart';
 import 'network_map_screen.dart';
 import 'cve_feed_screen.dart';
 import 'utilities_screen.dart';
