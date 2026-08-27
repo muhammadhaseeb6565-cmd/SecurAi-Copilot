@@ -79,16 +79,7 @@ async def active_threat_defense(request: Request, call_next):
                 log_threat_to_supabase(client_ip, "HMAC Payload Tampering")
                 return JSONResponse(status_code=403, content={"detail": "Payload Tampering Detected. Connection severed."})
             
-            # Re-inject the body so downstream endpoints can parse it
-            _receive_called = False
-            _original_receive = request._receive
-            async def new_receive():
-                nonlocal _receive_called
-                if not _receive_called:
-                    _receive_called = True
-                    return {"type": "http.request", "body": body_bytes, "more_body": False}
-                return await _original_receive()
-            request._receive = new_receive
+# Hack removed
 
 
     # LAYER 18: Strict Automated Scanner Fingerprinting
@@ -130,7 +121,9 @@ async def active_threat_defense(request: Request, call_next):
     if client_header != "mobile-app-verified-v1" and request.url.path.startswith("/api/"):
         return JSONResponse(status_code=403, content={"error": "Unauthorized API Access. Missing secure client signature."})
 
+    print('Before call_next')
     response = await call_next(request)
+    print('After call_next')
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
@@ -181,6 +174,7 @@ def read_root():
 
 @app.post("/chat")
 def chat(request: ChatRequest):
+    print('Inside chat endpoint!')
     return StreamingResponse(
         stream_security_copilot(request.message, request.persona, request.language, request.model, request.image_base64), 
         media_type="text/event-stream"
