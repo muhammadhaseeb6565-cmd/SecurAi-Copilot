@@ -67,7 +67,15 @@ class ApiService {
       if (imageBase64 != null) {
         bodyMap["image_base64"] = imageBase64;
       }
-      request.body = jsonEncode(bodyMap);
+      final bodyStr = jsonEncode(bodyMap);
+      request.body = bodyStr;
+      
+      final timestamp = request.headers['X-Request-Time']!;
+      final secret = utf8.encode('NuclearGradeSecurAISignature2026');
+      final msg = utf8.encode(timestamp + bodyStr);
+      final hmacSha256 = Hmac(sha256, secret);
+      final signature = hmacSha256.convert(msg).toString();
+      request.headers['X-Payload-Signature'] = signature;
 
       final response = await client.send(request);
 
