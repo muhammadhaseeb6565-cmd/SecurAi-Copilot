@@ -56,7 +56,7 @@ async def stream_security_copilot(message: str, persona: str = "auditor", langua
         if image_base64 and model_name != "llama-3.2-90b-vision-preview":
             model_name = "llama-3.2-90b-vision-preview"
 
-        llm = ChatGroq(groq_api_key=api_key, model_name=model_name, streaming=True)
+        llm = ChatGroq(groq_api_key=api_key, model_name=model_name, streaming=True, default_headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         
         system_prompt = get_app_context() + "\n\n" + PERSONAS.get(persona, PERSONAS["auditor"])
         
@@ -100,7 +100,7 @@ def generate_incident_report(alert_details: str, model_name: str = "openai/gpt-o
     if api_key == "mock_key_for_testing" or not api_key:
         return "# MOCK INCIDENT REPORT\nPlease set GROQ_API_KEY."
     
-    llm = ChatGroq(groq_api_key=api_key, model_name=model_name)
+    llm = ChatGroq(groq_api_key=api_key, model_name=model_name, default_headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     prompt = f"Generate a formal, professional Security Incident Report in Markdown for the following alert:\n{alert_details}"
     try:
         return llm.invoke(prompt).content
@@ -112,7 +112,7 @@ def generate_code_patch(alert_details: str, model_name: str = "openai/gpt-oss-20
     if api_key == "mock_key_for_testing" or not api_key:
         return "```python\n# Mock Patch\ndef fix_vulnerability():\n    pass\n```"
     
-    llm = ChatGroq(groq_api_key=api_key, model_name=model_name)
+    llm = ChatGroq(groq_api_key=api_key, model_name=model_name, default_headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     prompt = f"You are an expert Security Engineer. A vulnerability was detected: {alert_details}\nGenerate a secure code patch (in Python or Node.js) to fix this vulnerability. Output ONLY the markdown code block."
     try:
         return llm.invoke(prompt).content
