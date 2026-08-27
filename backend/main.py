@@ -57,7 +57,7 @@ async def active_threat_defense(request: Request, call_next):
     client_ip = request.client.host if request.client else "unknown"
 
     # LAYER 21: Cryptographic Payload Integrity (HMAC-SHA256)
-    if request.method in ["POST", "PUT", "PATCH"]:
+    if request.method in ["POST", "PUT", "PATCH"] and request.url.path != "/chat":
         body_bytes = await request.body()
         if body_bytes:
             signature = request.headers.get("X-Payload-Signature")
@@ -173,10 +173,33 @@ def read_root():
     return {"status": "Backend is running!"}
 
 @app.post("/chat")
-def chat(request: ChatRequest):
-    print('Inside chat endpoint!')
+async def chat(request: Request, payload: ChatRequest):
+    client_ip = request.client.host if request.client else "unknown"
+    if client_ip in BANNED_IPS:
+        return JSONResponse(status_code=403, content={"detail": "Payload Tampering Detected. Connection severed."})
+        
+    body_bytes = await request.body()
+    signature = request.headers.get("X-Payload-Signature")
+    req_time = request.headers.get("X-Request-Time")
+    
+    if not signature or not req_time:
+        BANNED_IPS.add(client_ip)
+        log_threat_to_supabase(client_ip, "Missing HMAC Signature")
+        return JSONResponse(status_code=403, content={"detail": "Missing military-grade cryptographic signature."})
+    
+    import hmac
+    import hashlib
+    secret = b"NuclearGradeSecurAISignature2026"
+    message = req_time.encode() + body_bytes
+    expected_mac = hmac.new(secret, message, hashlib.sha256).hexdigest()
+    
+    if not hmac.compare_digest(expected_mac, signature):
+        BANNED_IPS.add(client_ip)
+        log_threat_to_supabase(client_ip, "HMAC Payload Tampering")
+        return JSONResponse(status_code=403, content={"detail": "Payload Tampering Detected. Connection severed."})
+
     return StreamingResponse(
-        stream_security_copilot(request.message, request.persona, request.language, request.model, request.image_base64), 
+        stream_security_copilot(payload.message, payload.persona, payload.language, payload.model, payload.image_base64), 
         media_type="text/event-stream"
     )
 
