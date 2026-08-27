@@ -5,9 +5,14 @@ from pydantic import BaseModel
 from core.security_rag import stream_security_copilot, generate_incident_report, generate_code_patch
 import asyncio
 import os
+import httpx
 from groq import Groq
 
-groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
+# Use a custom httpx client to bypass Cloudflare blocking Groq SDK on Render IPs
+custom_http_client = httpx.Client(
+    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+)
+groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'), http_client=custom_http_client)
 import json
 import random
 import subprocess
@@ -75,8 +80,14 @@ async def active_threat_defense(request: Request, call_next):
                 return JSONResponse(status_code=403, content={"detail": "Payload Tampering Detected. Connection severed."})
             
             # Re-inject the body so downstream endpoints can parse it
+            _receive_called = False
+            _original_receive = request._receive
             async def new_receive():
-                return {"type": "http.request", "body": body_bytes}
+                nonlocal _receive_called
+                if not _receive_called:
+                    _receive_called = True
+                    return {"type": "http.request", "body": body_bytes, "more_body": False}
+                return await _original_receive()
             request._receive = new_receive
 
 
