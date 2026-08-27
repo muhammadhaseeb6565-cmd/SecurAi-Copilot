@@ -141,17 +141,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _saveApiUrl(String value) {
-    widget.prefs.setString('api_base_url', value.trim());
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Backend API URL updated successfully. Restart app to apply.',
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);

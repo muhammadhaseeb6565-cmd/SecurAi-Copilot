@@ -177,7 +177,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Error running github auto fix: $e');
+      debugPrint('Error running github auto fix: $e');
       return null;
     }
   }
@@ -282,7 +282,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Error fetching system metrics: $e');
+      debugPrint('Error fetching system metrics: $e');
       return null;
     }
   }
@@ -307,7 +307,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Error running shodan scan: $e');
+      debugPrint('Error running shodan scan: $e');
       return null;
     }
   }
@@ -333,7 +333,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Error running github PR review: $e');
+      debugPrint('Error running github PR review: $e');
       return null;
     }
   }

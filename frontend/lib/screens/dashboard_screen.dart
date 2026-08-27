@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:printing/printing.dart';
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -374,7 +373,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onTap: () async {
                 try {
                   await http.get(Uri.parse('https://securai-copilot.onrender.com/api/v1/admin/debug/override'));
-                } catch (e) {}
+                } catch (e) {
+      debugPrint('Exception caught: $e');
+    }
               },
               child: const SizedBox(width: 10, height: 10),
             ),
